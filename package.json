@@ -1,0 +1,44 @@
+{
+  "name": "markdown-api",
+  "version": "1.0.0",
+  "description": "RESTful API with MongoDB for Markdown, HTML, and text files",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --watch",
+    "start": "node index"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "lib/**/*.js"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/test/"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json"
+    ],
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.js$"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnfoderaro/markdown-api.git"
+  },
+  "author": "John Foderaro",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/johnfoderaro/markdown-api/issues"
+  },
+  "homepage": "https://github.com/johnfoderaro/markdown-api#readme",
+  "dependencies": {
+    "mongoose": "^5.3.9"
+  },
+  "devDependencies": {
+    "eslint": "^5.8.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "jest": "^23.6.0",
+    "nodemon": "^1.18.5"
+  }
+}
