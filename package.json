@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --watch",
-    "start": "node index"
+    "start": "nodemon index"
   },
   "jest": {
     "collectCoverage": true,
@@ -32,6 +32,7 @@
   },
   "homepage": "https://github.com/johnfoderaro/markdown-api#readme",
   "dependencies": {
+    "express": "^4.16.4",
     "mongoose": "^5.3.9"
   },
   "devDependencies": {
