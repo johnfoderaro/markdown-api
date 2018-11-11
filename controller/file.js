@@ -22,7 +22,13 @@ async function deleteFile(req, res, next) {
 }
 
 async function getFile(req, res, next) {
-  
+  try {
+    const { body: { id } } = req;
+    const file = await FileModel.findById(id);
+    return res.send(file);
+  } catch (error) {
+    return next(error);
+  }
 }
 
 async function renameFile(req, res, next) {
@@ -38,5 +44,6 @@ async function renameFile(req, res, next) {
 module.exports = {
   addFile,
   deleteFile,
+  getFile,
   renameFile,
 };
