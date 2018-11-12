@@ -10,7 +10,10 @@
   "jest": {
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "lib/**/*.js"
+      "controller/**/*.js",
+      "lib/**/*.js",
+      "model/**/*.js",
+      "route/**/*.js"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/test/"
