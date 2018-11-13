@@ -18,8 +18,9 @@ const nodeSchema = new mongoose.Schema({
     lowercase: true,
     required: [true, '`parent` is required'],
   },
-  chidren: {
+  children: {
     type: [Object],
+    default: undefined,
     lowercase: true,
     required: [true, '`children` is required'],
   },
