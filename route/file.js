@@ -3,10 +3,16 @@ const fileController = require('../controller/file');
 
 const router = express.Router();
 
-const { addFile, deleteFile, renameFile } = fileController;
+const {
+  addFile,
+  deleteFile,
+  getFile,
+  renameFile,
+} = fileController;
 
+router.get('/get/:id', getFile);
 router.post('/add', addFile);
-router.post('/delete', deleteFile);
-router.post('/rename', renameFile);
+router.delete('/delete', deleteFile);
+router.put('/rename', renameFile);
 
 module.exports = router;

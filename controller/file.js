@@ -23,9 +23,9 @@ async function deleteFile(req, res, next) {
 
 async function getFile(req, res, next) {
   try {
-    const { body: { id } } = req;
+    const { params: { id } } = req;
     const file = await FileModel.findById(id);
-    return res.send(file);
+    return file ? res.send(file) : res.sendStatus(404);
   } catch (error) {
     return next(error);
   }
