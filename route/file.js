@@ -1,5 +1,7 @@
 const express = require('express');
-const fileController = require('../controller/file');
+
+const FileController = require('../controller/file');
+const FileModel = require('../model/file');
 
 const router = express.Router();
 
@@ -8,7 +10,7 @@ const {
   deleteFile,
   getFile,
   renameFile,
-} = fileController;
+} = new FileController(FileModel);
 
 router.get('/get/:id', getFile);
 router.post('/add', addFile);
