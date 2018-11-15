@@ -24,7 +24,7 @@ class NodeController {
           id,
         },
       } = req;
-      const rootNode = await this.model.findOne({ name: 'root', parent: null });
+      const rootNode = this.root || await this.model.findOne({ name: 'root', parent: null });
       if (!rootNode) {
         this.root = await this.model.addFile({
           name: 'root',
