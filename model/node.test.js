@@ -9,7 +9,6 @@ describe('Node model', () => {
       expect(error.errors.type).toBeDefined();
       expect(error.errors.parent).toBeDefined();
       expect(error.errors.children).toBeDefined();
-      expect(error.errors.id).toBeDefined();
       done();
     });
   });

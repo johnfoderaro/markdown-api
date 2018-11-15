@@ -26,7 +26,6 @@ const nodeSchema = new mongoose.Schema({
   },
   id: {
     type: ObjectId,
-    required: [true, '`id` is required'],
   },
 });
 
