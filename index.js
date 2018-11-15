@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 
 const fileRouter = require('./route/file');
 
+const NodeModel = require('./model/node');
+const NodeController = require('./controller/node');
+
 const app = express();
 const port = 3000;
 
@@ -14,4 +17,19 @@ mongoose.connect('mongodb://localhost/node-test', { useNewUrlParser: true });
 const db = mongoose.connection;
 
 db.on('error', () => console.error('connection error'));
-db.once('open', () => console.log('connected to mongodb'));
+db.once('open', async () => {
+  const nodeController = new NodeController(NodeModel);
+  const req = {
+    body: {
+      name: 'test02',
+      type: 'file',
+      parent: 'root',
+      id: '5be7a5bcc5b4ff4eb7334fa9',
+    },
+  };
+  const res = {};
+  res.sendStatus = d => console.log(d);
+  const next = e => console.error(e);
+  await nodeController.insertNode(req, res, next);
+  console.log('connected to mongodb');
+});
