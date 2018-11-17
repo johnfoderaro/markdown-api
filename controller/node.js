@@ -17,6 +17,9 @@ class NodeController {
     let current;
     try {
       const { body } = req;
+      if (!body.parent) {
+        return Promise.reject(new Error('Cannot have orphan nodes'));
+      }
       if (!this.root) {
         const existingRoot = await this.model.findOne({ name: 'root', parent: null });
         const createRoot = async () => this.model.create({
@@ -26,19 +29,16 @@ class NodeController {
           children: [],
           id: null,
         });
-        this.root = existingRoot || await createRoot();
+        this.root = (existingRoot && existingRoot.toObject()) || await createRoot();
       }
       current = this.traverse(body.parent);
       const { _id, children } = current;
       const duplicateChild = children.find(child => child.name === body.name);
       if (duplicateChild) {
-        throw new Error('Cannot add duplicate children');
+        return Promise.reject(new Error('Cannot add duplicate children'));
       }
       if (current.type === 'file') {
-        throw new Error('Cannot add child to node type of `file`');
-      }
-      if (!body.parent) {
-        throw new Error('Cannot have orphan nodes');
+        return Promise.reject(new Error('Cannot add child to node type of `file`'));
       }
       const { nModified } = await this.model.updateOne({ _id }, {
         name: current.name,
