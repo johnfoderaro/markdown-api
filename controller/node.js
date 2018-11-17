@@ -16,52 +16,46 @@ class NodeController {
   async insertNode(req, res, next) {
     let current;
     try {
-      const {
-        body: {
-          name,
-          type,
-          parent,
-          id,
-        },
-      } = req;
-      const rootNode = this.root || await this.model.findOne({ name: 'root', parent: null });
-      if (!rootNode) {
-        this.root = await this.model.addFile({
+      const { body } = req;
+      if (!body.parent) {
+        return Promise.reject(new Error('Cannot have orphan nodes'));
+      }
+      if (!this.root) {
+        const existingRoot = await this.model.findOne({ name: 'root', parent: null });
+        const createRoot = async () => this.model.create({
           name: 'root',
           type: 'directory',
           parent: null,
           children: [],
           id: null,
         });
-      } else {
-        this.root = rootNode;
-        current = this.traverse(parent);
-        const { _id, children } = current;
-        const duplicateChild = children.find(child => child.name === name);
-        if (duplicateChild) {
-          throw new Error('Cannot add duplicate children');
-        }
-        if (current.type === 'file') {
-          throw new Error('Cannot add child to node type of `file`');
-        }
-        const update = await this.model.updateOne({ _id }, {
-          name: current.name,
-          parent: current.parent,
-          type: current.type,
-          id: current.id,
-          children: [{
-            name,
-            type,
-            parent,
-            id,
-          }, ...children],
-        });
-        return res(update);
+        this.root = (existingRoot && existingRoot.toObject()) || await createRoot();
       }
+      current = this.traverse(body.parent);
+      const { _id, children } = current;
+      const duplicateChild = children.find(child => child.name === body.name);
+      if (duplicateChild) {
+        return Promise.reject(new Error('Cannot add duplicate children'));
+      }
+      if (current.type === 'file') {
+        return Promise.reject(new Error('Cannot add child to node type of `file`'));
+      }
+      const { nModified } = await this.model.updateOne({ _id }, {
+        name: current.name,
+        parent: current.parent,
+        type: current.type,
+        id: current.id,
+        children: [{
+          name: body.name,
+          type: body.type,
+          parent: body.parent,
+          id: body.id,
+        }, ...children],
+      });
+      return nModified ? res.sendStatus(200) : res.sendStatus(500);
     } catch (error) {
       return next(error);
     }
-    return false;
   }
 
   // async deleteNode(req, res, next) {

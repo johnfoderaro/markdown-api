@@ -7,7 +7,6 @@ describe('Node model', () => {
     nodeModel.validate((error) => {
       expect(error.errors.name).toBeDefined();
       expect(error.errors.type).toBeDefined();
-      expect(error.errors.parent).toBeDefined();
       expect(error.errors.children).toBeDefined();
       done();
     });
