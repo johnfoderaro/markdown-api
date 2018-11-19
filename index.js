@@ -21,7 +21,7 @@ db.once('open', async () => {
   const nodeController = new NodeController(NodeModel);
   const req = {
     body: {
-      name: 'test02',
+      name: 'test01',
       type: 'file',
       parent: 'root',
       id: '5be7a5bcc5b4ff4eb7334fa9',
@@ -31,6 +31,9 @@ db.once('open', async () => {
   res.sendStatus = d => console.log(d);
   res.send = d => console.log(d);
   const next = e => console.error(e);
+  await nodeController.getTree(req, res, next);
+  // await nodeController.insertNode(req, res, next);
+  await nodeController.deleteNode(req, res, next);
   await nodeController.getTree(req, res, next);
   console.log('connected to mongodb');
 });

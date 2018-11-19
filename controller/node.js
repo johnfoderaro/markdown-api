@@ -28,12 +28,13 @@ class NodeController {
     return existingRoot.toObject();
   }
 
+  // FIXME consolidate create/get methods, since we always want a fresh copy from db
   async getTree(req, res, next) {
     try {
       if (!this.root) {
         this.root = await this.createRootNode();
       }
-      return res.send(this.root);
+      return res.send(await this.model.findOne({ name: 'root', parent: null }));
     } catch (error) {
       return next(error);
     }
@@ -76,6 +77,7 @@ class NodeController {
     }
   }
 
+  // FIXME this does not detele on the db level
   async deleteNode(req, res, next) {
     try {
       const { body: { name, parent } } = req;
