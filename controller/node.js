@@ -13,32 +13,50 @@ class NodeController {
     this.queue.push(item);
   }
 
+  async createRootNode() {
+    const existingRoot = await this.model.findOne({ name: 'root', parent: null });
+    if (!existingRoot) {
+      const createdNode = await this.model.create({
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [],
+        id: null,
+      });
+      return createdNode.toObject();
+    }
+    return existingRoot.toObject();
+  }
+
+  async getTree(req, res, next) {
+    try {
+      if (!this.root) {
+        this.root = await this.createRootNode();
+      }
+      return res.send(this.root);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   async insertNode(req, res, next) {
     let current;
     try {
       const { body } = req;
       if (!body.parent) {
-        return Promise.reject(new Error('Cannot have orphan nodes'));
+        throw new Error('Cannot have orphan nodes');
       }
       if (!this.root) {
-        const existingRoot = await this.model.findOne({ name: 'root', parent: null });
-        const createRoot = async () => this.model.create({
-          name: 'root',
-          type: 'directory',
-          parent: null,
-          children: [],
-          id: null,
-        });
-        this.root = (existingRoot && existingRoot.toObject()) || await createRoot();
+        this.root = await this.createRootNode();
       }
       current = this.traverse(body.parent);
       const { _id, children } = current;
       const duplicateChild = children.find(child => child.name === body.name);
       if (duplicateChild) {
-        return Promise.reject(new Error('Cannot add duplicate children'));
+        throw new Error('Cannot add duplicate children');
       }
       if (current.type === 'file') {
-        return Promise.reject(new Error('Cannot add child to node type of `file`'));
+        throw new Error('Cannot add child to node type of `file`');
       }
       const { nModified } = await this.model.updateOne({ _id }, {
         name: current.name,
@@ -58,19 +76,29 @@ class NodeController {
     }
   }
 
-  // async deleteNode(req, res, next) {
-
-  // }
-
-  // async getNode(req, res, next) {
-
-  // }
-
-  // async getTree(req, res, next) {
-
-  // }
+  async deleteNode(req, res, next) {
+    try {
+      const { body: { name, parent } } = req;
+      if (!this.root) {
+        this.root = await this.createRootNode();
+      }
+      if (name === 'root') {
+        throw new Error('Cannot delete root node');
+      }
+      const { children } = this.traverse(parent);
+      const index = children.map(child => child.name).indexOf(name);
+      children.splice(index, 1);
+      return res.sendStatus(200);
+    } catch (error) {
+      return next(error);
+    }
+  }
 
   // async renameNode(req, res, next) {
+
+  // }
+
+  // async updateNode(req, res, next) {
 
   // }
 

@@ -73,12 +73,11 @@ beforeEach(() => {
       id,
       children,
     }) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const isRoot = name === 'root';
         const isDirectory = type === 'directory';
         const isChildren = Array.isArray(children);
         const ready = isRoot && isDirectory && isChildren && !parent && !id;
-        if (_id === null) return reject(new Error());
         if (_id === 500) return resolve({ nModified: false });
         if (ready) return resolve({ nModified: true });
         return false;
@@ -108,112 +107,7 @@ describe('node', () => {
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(200);
     });
-    it('should create a new tree when one is not found', async () => {
-      nodeModelMock.findOne = () => Promise.resolve(false);
-      nodeController = new NodeController(nodeModelMock);
-      await nodeController.insertNode(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(200);
-    });
-    it('should reject promise with an error when adding a duplicate', () => {
-      nodeController.root = {
-        name: 'root',
-        type: 'directory',
-        parent: null,
-        children: [{
-          name: 'john',
-          type: 'file',
-          parent: 'root',
-          children: [],
-          id: 123,
-        }],
-        id: null,
-      };
-      req = {
-        body: {
-          name: 'john',
-          type: 'file',
-          parent: 'root',
-          children: [],
-          id: 123,
-        },
-      };
-      expect(nodeController.insertNode(req, res, next))
-        .rejects.toEqual(new Error('Cannot add duplicate children'));
-    });
-    it('should reject promise with an error when adding a duplicate', () => {
-      nodeController.root = {
-        name: 'root',
-        type: 'directory',
-        parent: null,
-        children: [{
-          name: 'john',
-          type: 'file',
-          parent: 'root',
-          children: [],
-          id: 123,
-        }],
-        id: null,
-      };
-      req = {
-        body: {
-          name: 'paula',
-          type: 'file',
-          parent: 'john',
-          children: [],
-          id: 123,
-        },
-      };
-      expect(nodeController.insertNode(req, res, next))
-        .rejects.toEqual(new Error('Cannot add child to node type of `file`'));
-    });
-    it('should reject promise with an error when adding an orphan node', () => {
-      nodeController.root = {
-        name: 'root',
-        type: 'directory',
-        parent: null,
-        children: [{
-          name: 'john',
-          type: 'directory',
-          parent: 'root',
-          children: [],
-          id: 123,
-        }],
-        id: null,
-      };
-      req = {
-        body: {
-          name: 'paula',
-          type: 'file',
-          parent: null,
-          children: [],
-          id: 123,
-        },
-      };
-      expect(nodeController.insertNode(req, res, next))
-        .rejects.toEqual(new Error('Cannot have orphan nodes'));
-    });
-    it('should catch an error and call next', async () => {
-      nodeController.root = {
-        name: 'root',
-        type: 'directory',
-        parent: null,
-        children: [],
-        id: null,
-        _id: null, // force a reject(new Error()) from model mock
-      };
-      req = {
-        body: {
-          name: 'john',
-          type: 'file',
-          parent: 'root',
-          id: 123,
-        },
-      };
-      await nodeController.insertNode(req, res, next);
-      expect(next).toBeCalledTimes(1);
-    });
-    it('should call res.sendStatus', async () => {
+    it('should return a 500 status', async () => {
       nodeController.root = {
         name: 'root',
         type: 'directory',
@@ -221,6 +115,9 @@ describe('node', () => {
         children: [],
         id: null,
         _id: 500, // force !nModified from model mock
+        toObject() {
+          return nodeController.root;
+        },
       };
       req = {
         body: {
@@ -233,6 +130,208 @@ describe('node', () => {
       await nodeController.insertNode(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(500);
+    });
+    it('should catch error and call next when adding duplicate children', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'file',
+          parent: 'root',
+          children: [],
+          id: 123,
+        }],
+        id: null,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = {
+        body: {
+          name: 'john',
+          type: 'file',
+          parent: 'root',
+          children: [],
+          id: 123,
+        },
+      };
+      await nodeController.insertNode(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Cannot add duplicate children'));
+    });
+    it('should catch error and call next when inserting a node into a parent with type `file`', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'file',
+          parent: 'root',
+          children: [],
+          id: 123,
+        }],
+        id: null,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = {
+        body: {
+          name: 'paula',
+          type: 'file',
+          parent: 'john',
+          children: [],
+          id: 123,
+        },
+      };
+      await nodeController.insertNode(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Cannot add child to node type of `file`'));
+    });
+    it('should catch error and call next when adding an orphan node', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'directory',
+          parent: 'root',
+          children: [],
+          id: 123,
+        }],
+        id: null,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = {
+        body: {
+          name: 'paula',
+          type: 'file',
+          parent: null,
+          children: [],
+          id: 123,
+        },
+      };
+      await nodeController.insertNode(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Cannot have orphan nodes'));
+    });
+    it('should catch error and call next insert fails', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [],
+        id: null,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = {
+        body: {
+          name: 'john',
+          type: 'file',
+          parent: 'root',
+          id: 123,
+        },
+      };
+      nodeModelMock.updateOne = () => Promise.reject(new Error());
+      await nodeController.insertNode(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error());
+    });
+  });
+  describe('getTree', () => {
+    it('should return an existing tree', async () => {
+      req = { body: { name: 'john', parent: 'root' } };
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'directory',
+          parent: 'root',
+          id: 456,
+          children: [{
+            name: 'paula',
+            type: 'file',
+            parent: 'john',
+            id: 789,
+          }],
+        }],
+        id: 123,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      await nodeController.getTree(req, res, next);
+      expect(res.send).toBeCalledTimes(1);
+      expect(res.send).toBeCalledWith(nodeController.root);
+    });
+    it('should return a new tree', async () => {
+      nodeModelMock.findOne = () => false;
+      nodeModelMock.create = node => ({
+        ...node,
+        toObject() {
+          return node;
+        },
+      });
+      await nodeController.getTree(req, res, next);
+      expect(res.send).toBeCalledTimes(1);
+      expect(res.send).toBeCalledWith({
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [],
+        id: null,
+      });
+    });
+    it('should call next with a rejected promise containing an error object', async () => {
+      nodeModelMock.findOne = () => Promise.reject(new Error());
+      await nodeController.getTree(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error());
+    });
+  });
+  describe('deleteNode', () => {
+    it('should delete a node', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'directory',
+          parent: 'root',
+          id: 456,
+          children: [{
+            name: 'paula',
+            type: 'file',
+            parent: 'john',
+            id: 789,
+          }],
+        }],
+        id: 123,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = { body: { name: 'paula', parent: 'john' } };
+      await nodeController.deleteNode(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(200);
+    });
+    it('should return an error when deleting the root node', async () => {
+      req = { body: { name: 'root', parent: null } };
+      await nodeController.deleteNode(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Cannot delete root node'));
     });
   });
 });

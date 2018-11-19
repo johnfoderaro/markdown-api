@@ -29,7 +29,8 @@ db.once('open', async () => {
   };
   const res = {};
   res.sendStatus = d => console.log(d);
+  res.send = d => console.log(d);
   const next = e => console.error(e);
-  await nodeController.insertNode(req, res, next);
+  await nodeController.getTree(req, res, next);
   console.log('connected to mongodb');
 });
