@@ -77,20 +77,24 @@ class NodeController {
     }
   }
 
-  // FIXME this does not detele on the db level
   async deleteNode(req, res, next) {
     try {
-      const { body: { name, parent } } = req;
+      const { body } = req;
       if (!this.root) {
         this.root = await this.createRootNode();
       }
-      if (name === 'root') {
+      if (body.name === 'root') {
         throw new Error('Cannot delete root node');
       }
-      const { children } = this.traverse(parent);
-      const index = children.map(child => child.name).indexOf(name);
+      const current = this.traverse(body.parent);
+      const { children, _id, id } = current;
+      const index = children.map(child => child.name).indexOf(body.name);
+      if (index < 0) {
+        throw new Error('Cannot find node to delete');
+      }
       children.splice(index, 1);
-      return res.sendStatus(200);
+      const { nModified } = await this.model.updateOne({ _id: current.name === 'root' ? _id : id }, { children });
+      return nModified ? res.sendStatus(200) : res.sendStatus(500);
     } catch (error) {
       return next(error);
     }

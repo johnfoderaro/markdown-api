@@ -107,7 +107,7 @@ describe('node', () => {
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(200);
     });
-    it('should return a 500 status', async () => {
+    it('should return a 500 status if updateOne does not modify a node', async () => {
       nodeController.root = {
         name: 'root',
         type: 'directory',
@@ -270,13 +270,19 @@ describe('node', () => {
           return nodeController.root;
         },
       };
+      nodeModelMock.findOne = async () => Promise.resolve(nodeController.root);
       await nodeController.getTree(req, res, next);
       expect(res.send).toBeCalledTimes(1);
       expect(res.send).toBeCalledWith(nodeController.root);
     });
     it('should return a new tree', async () => {
-      nodeModelMock.findOne = () => false;
-      nodeModelMock.create = node => ({
+      nodeModelMock.findOne = async ({ name, parent }) => {
+        if (name === 'root' && !parent) {
+          return Promise.resolve(nodeController.root);
+        }
+        return Promise.reject(new Error());
+      };
+      nodeModelMock.create = async node => Promise.resolve({
         ...node,
         toObject() {
           return node;
@@ -323,6 +329,12 @@ describe('node', () => {
         },
       };
       req = { body: { name: 'paula', parent: 'john' } };
+      nodeModelMock.updateOne = async ({ _id }, { children }) => {
+        if (_id === 456 && children.length === 0) {
+          return Promise.resolve({ nModified: true });
+        }
+        return Promise.resolve({ nModified: false });
+      };
       await nodeController.deleteNode(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(200);
@@ -332,6 +344,51 @@ describe('node', () => {
       await nodeController.deleteNode(req, res, next);
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Cannot delete root node'));
+    });
+    it('should return an error when deleting a non-existent node', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'directory',
+          parent: 'root',
+          id: 456,
+          children: [],
+        }],
+        id: 123,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = { body: { name: 'paula', parent: 'john' } };
+      await nodeController.deleteNode(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Cannot find node to delete'));
+    });
+    it('should return a 500 status if updatedOne does not modify a node', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'directory',
+          parent: 'root',
+          id: 456,
+          children: [],
+        }],
+        id: 123,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = { body: { name: 'john', parent: 'root' } };
+      nodeModelMock.updateOne = async () => Promise.resolve(false);
+      await nodeController.deleteNode(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(500);
     });
   });
 });
