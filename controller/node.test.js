@@ -391,6 +391,94 @@ describe('node', () => {
       expect(res.sendStatus).toBeCalledWith(500);
     });
   });
+  describe('renameNode', () => {
+    it('should return a 200 status', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'directory',
+          parent: 'root',
+          id: 456,
+          children: [],
+        }],
+        id: 123,
+        _id: 123,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = {
+        body: {
+          name: 'john',
+          parent: 'root',
+          update: {
+            name: 'paula',
+            parent: 'root',
+            type: 'file',
+            id: 456,
+            children: [],
+          },
+        },
+      };
+      nodeModelMock.updateOne = async ({ _id }, { children }) => {
+        if (_id === 123 && children.length === 1) {
+          return Promise.resolve({ nModified: true });
+        }
+        return Promise.resolve({ nModified: false });
+      };
+      await nodeController.renameNode(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(200);
+    });
+    it('should catch error and call next when renaming root node', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'directory',
+          parent: 'root',
+          id: 456,
+          children: [],
+        }],
+        id: 123,
+        _id: 123,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = { body: { name: 'root', parent: null, update: { } } };
+      await nodeController.renameNode(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Cannot rename root node'));
+    });
+    it('should catch error and call next when updating an non-existent node', async () => {
+      nodeController.root = {
+        name: 'root',
+        type: 'directory',
+        parent: null,
+        children: [{
+          name: 'john',
+          type: 'directory',
+          parent: 'root',
+          id: 456,
+          children: [],
+        }],
+        id: 123,
+        toObject() {
+          return nodeController.root;
+        },
+      };
+      req = { body: { name: 'paula', parent: 'root', update: { } } };
+      await nodeController.renameNode(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Cannot find node to rename'));
+    });
+  });
 });
 
 afterEach(() => jest.resetAllMocks());

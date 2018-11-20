@@ -3,6 +3,14 @@ class NodeController {
     this.queue = [];
     this.root = null;
     this.model = model;
+    this.dequeue = this.dequeue.bind(this);
+    this.enqueue = this.enqueue.bind(this);
+    this.createRootNode = this.createRootNode.bind(this);
+    this.getTree = this.getTree.bind(this);
+    this.insertNode = this.insertNode.bind(this);
+    this.deleteNode = this.deleteNode.bind(this);
+    this.renameNode = this.renameNode.bind(this);
+    this.traverse = this.traverse.bind(this);
   }
 
   dequeue() {
@@ -33,6 +41,7 @@ class NodeController {
       if (!this.root) {
         this.root = await this.createRootNode();
       }
+      // TODO send JSON
       return res.send(await this.model.findOne({ name: 'root', parent: null }));
     } catch (error) {
       return next(error);
@@ -99,13 +108,29 @@ class NodeController {
     }
   }
 
-  // async renameNode(req, res, next) {
-
-  // }
-
-  // async updateNode(req, res, next) {
-
-  // }
+  async renameNode(req, res, next) {
+    try {
+      const { body } = req;
+      if (body.name === 'root') {
+        throw new Error('Cannot rename root node');
+      }
+      const current = this.traverse(body.parent);
+      const { children, _id, id } = current;
+      const index = children.map(child => child.name).indexOf(body.name);
+      if (index < 0) {
+        throw new Error('Cannot find node to rename');
+      }
+      children[index] = body.update;
+      const { nModified } = await this.model.updateOne({
+        _id: current.name === 'root' ? _id : id,
+      }, {
+        children: [...children],
+      });
+      return nModified ? res.sendStatus(200) : res.sendStatus(500);
+    } catch (error) {
+      return next(error);
+    }
+  }
 
   traverse(destination) {
     let current;
