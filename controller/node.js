@@ -28,7 +28,6 @@ class NodeController {
     return existingRoot.toObject();
   }
 
-  // FIXME consolidate create/get methods, since we always want a fresh copy from db
   async getTree(req, res, next) {
     try {
       if (!this.root) {
