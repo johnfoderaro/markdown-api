@@ -1,4 +1,4 @@
-class NodeController {
+class FileSystemController {
   constructor(model) {
     this.queue = [];
     this.root = null;
@@ -149,4 +149,4 @@ class NodeController {
   }
 }
 
-module.exports = NodeController;
+module.exports = FileSystemController;

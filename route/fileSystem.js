@@ -1,7 +1,7 @@
 const express = require('express');
 
-const NodeController = require('../controller/node');
-const NodeModel = require('../model/node');
+const FileSystemController = require('../controller/fileSystem');
+const FileSystemModel = require('../model/fileSystem');
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ const {
   deleteNode,
   getTree,
   renameNode,
-} = new NodeController(NodeModel);
+} = new FileSystemController(FileSystemModel);
 
 router.get('/get', getTree);
 router.post('/add', insertNode);

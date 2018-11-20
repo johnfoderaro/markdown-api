@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const { ObjectId } = mongoose.Schema.Types;
 
-const nodeSchema = new mongoose.Schema({
+const fileSystemSchema = new mongoose.Schema({
   name: {
     type: String,
     lowercase: true,
@@ -28,6 +28,6 @@ const nodeSchema = new mongoose.Schema({
   },
 });
 
-const Node = mongoose.model('Node', nodeSchema);
+const FileSystem = mongoose.model('FileSystem', fileSystemSchema);
 
-module.exports = Node;
+module.exports = FileSystem;
