@@ -22,13 +22,22 @@ class FileSystemController {
   }
 
   async init() {
-    this.root = await this.model.create({
-      name: 'root',
-      type: 'directory',
-      parent: null,
-      children: [],
-      id: null,
-    });
+    try {
+      const existing = await this.model.findOne({ name: 'root', parent: null });
+      if (!existing) {
+        this.root = await this.model.create({
+          name: 'root',
+          type: 'directory',
+          parent: null,
+          children: [],
+          id: null,
+        });
+      } else {
+        this.root = existing;
+      }
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   async get(req, res, next) {
@@ -47,7 +56,8 @@ class FileSystemController {
         throw new Error('Cannot have orphan nodes');
       }
       current = this.traverse(body.parent);
-      const { _id, children } = current;
+      const { children } = current;
+      const id = current._id || current.id; 
       const duplicateChild = children.find(child => child.name === body.name);
       if (duplicateChild) {
         throw new Error('Cannot add duplicate children');
@@ -55,7 +65,7 @@ class FileSystemController {
       if (current.type === 'file') {
         throw new Error('Cannot add child to node type of `file`');
       }
-      const { nModified } = await this.model.updateOne({ _id }, {
+      const { nModified } = await this.model.updateOne({ _id: id }, {
         name: current.name,
         parent: current.parent,
         type: current.type,

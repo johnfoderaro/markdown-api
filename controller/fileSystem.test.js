@@ -8,26 +8,15 @@ let fileSystemController;
 
 beforeEach(() => {
   fileSystemModelMock = {
-    create({
+    findOneAndUpdate({
       name,
-      type,
       parent,
-      children,
-      id,
-    }) {
+    }, update, { upsert }) {
       return new Promise((resolve, reject) => {
         const isRoot = name === 'root';
-        const isDirectory = type === 'directory';
-        const emptyChildrenArr = Array.isArray(children) && children.length === 0;
-        const ready = isRoot && isDirectory && emptyChildrenArr && !parent && !id;
-        if (ready) {
-          return resolve({
-            name,
-            type,
-            parent,
-            children,
-            id,
-          });
+        const ready = isRoot && !parent;
+        if (ready && upsert) {
+          return resolve({ ...update });
         }
         return reject(new Error());
       });
