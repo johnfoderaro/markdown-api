@@ -6,15 +6,15 @@ const FileSystemModel = require('../model/fileSystem');
 const router = express.Router();
 
 const {
-  insertNode,
-  deleteNode,
-  getTree,
-  renameNode,
+  get,
+  insert,
+  remove,
+  rename,
 } = new FileSystemController(FileSystemModel);
 
-router.get('/get', getTree);
-router.post('/add', insertNode);
-router.delete('/delete', deleteNode);
-router.put('/rename', renameNode);
+router.get('/get', get);
+router.post('/insert', insert);
+router.delete('/remove', remove);
+router.put('/rename', rename);
 
 module.exports = router;

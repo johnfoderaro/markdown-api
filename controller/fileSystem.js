@@ -1,15 +1,15 @@
 class FileSystemController {
   constructor(model) {
     this.queue = [];
-    this.root = null;
     this.model = model;
+    this.root = this.init();
     this.dequeue = this.dequeue.bind(this);
     this.enqueue = this.enqueue.bind(this);
-    this.createRootNode = this.createRootNode.bind(this);
-    this.getTree = this.getTree.bind(this);
-    this.insertNode = this.insertNode.bind(this);
-    this.deleteNode = this.deleteNode.bind(this);
-    this.renameNode = this.renameNode.bind(this);
+    this.init = this.init.bind(this);
+    this.get = this.get.bind(this);
+    this.insert = this.insert.bind(this);
+    this.remove = this.remove.bind(this);
+    this.rename = this.rename.bind(this);
     this.traverse = this.traverse.bind(this);
   }
 
@@ -21,42 +21,30 @@ class FileSystemController {
     this.queue.push(item);
   }
 
-  async createRootNode() {
-    const existingRoot = await this.model.findOne({ name: 'root', parent: null });
-    if (!existingRoot) {
-      const createdNode = await this.model.create({
-        name: 'root',
-        type: 'directory',
-        parent: null,
-        children: [],
-        id: null,
-      });
-      return createdNode.toObject();
-    }
-    return existingRoot.toObject();
+  async init() {
+    this.root = await this.model.create({
+      name: 'root',
+      type: 'directory',
+      parent: null,
+      children: [],
+      id: null,
+    });
   }
 
-  async getTree(req, res, next) {
+  async get(req, res, next) {
     try {
-      if (!this.root) {
-        this.root = await this.createRootNode();
-      }
-      // TODO send JSON
       return res.send(await this.model.findOne({ name: 'root', parent: null }));
     } catch (error) {
       return next(error);
     }
   }
 
-  async insertNode(req, res, next) {
+  async insert(req, res, next) {
     let current;
     try {
       const { body } = req;
       if (!body.parent) {
         throw new Error('Cannot have orphan nodes');
-      }
-      if (!this.root) {
-        this.root = await this.createRootNode();
       }
       current = this.traverse(body.parent);
       const { _id, children } = current;
@@ -85,12 +73,9 @@ class FileSystemController {
     }
   }
 
-  async deleteNode(req, res, next) {
+  async remove(req, res, next) {
     try {
       const { body } = req;
-      if (!this.root) {
-        this.root = await this.createRootNode();
-      }
       if (body.name === 'root') {
         throw new Error('Cannot delete root node');
       }
@@ -108,7 +93,7 @@ class FileSystemController {
     }
   }
 
-  async renameNode(req, res, next) {
+  async rename(req, res, next) {
     try {
       const { body } = req;
       if (body.name === 'root') {
