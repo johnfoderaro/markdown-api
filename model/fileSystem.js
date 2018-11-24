@@ -19,7 +19,6 @@ const fileSystemSchema = new mongoose.Schema({
   },
   children: {
     type: [Object],
-    default: undefined,
     lowercase: true,
     required: [true, '`children` is required'],
   },

@@ -8,15 +8,26 @@ let fileSystemController;
 
 beforeEach(() => {
   fileSystemModelMock = {
-    findOneAndUpdate({
+    create({
       name,
+      type,
       parent,
-    }, update, { upsert }) {
+      children,
+      id,
+    }) {
       return new Promise((resolve, reject) => {
         const isRoot = name === 'root';
-        const ready = isRoot && !parent;
-        if (ready && upsert) {
-          return resolve({ ...update });
+        const isDirectory = type === 'directory';
+        const emptyChildrenArr = Array.isArray(children) && children.length === 0;
+        const ready = isRoot && isDirectory && emptyChildrenArr && !parent && !id;
+        if (ready) {
+          return resolve({
+            name,
+            type,
+            parent,
+            children,
+            id,
+          });
         }
         return reject(new Error());
       });
@@ -38,37 +49,22 @@ beforeEach(() => {
     findOne({ name, parent }) {
       return new Promise((resolve, reject) => {
         if (name === 'root' && !parent) {
-          const doc = {
-            toObject() {
-              return {
-                name: 'root',
-                type: 'directory',
-                parent: null,
-                children: [],
-                id: null,
-              };
-            },
-          };
-          return resolve(doc);
+          return resolve({
+            name: 'root',
+            type: 'directory',
+            parent: null,
+            children: [],
+            id: null,
+          });
         }
         if (name !== 'root' && !parent) return resolve(false);
         return reject(new Error());
       });
     },
-    updateOne({ _id }, {
-      name,
-      parent,
-      type,
-      id,
-      children,
-    }) {
+    updateOne({ _id }, { children }) {
       return new Promise((resolve) => {
-        const isRoot = name === 'root';
-        const isDirectory = type === 'directory';
-        const isChildren = Array.isArray(children);
-        const ready = isRoot && isDirectory && isChildren && !parent && !id;
         if (_id === 500) return resolve({ nModified: false });
-        if (ready) return resolve({ nModified: true });
+        if (children) return resolve({ nModified: true });
         return false;
       });
     },
@@ -86,10 +82,12 @@ describe('node', () => {
     it('should return a 200 status', async () => {
       req = {
         body: {
+          _id: 123,
+          id: 123,
           name: 'john',
           type: 'file',
           parent: 'root',
-          id: 123,
+          children: [],
         },
       };
       await fileSystemController.insert(req, res, next);
@@ -104,9 +102,6 @@ describe('node', () => {
         children: [],
         id: null,
         _id: 500, // force !nModified from model mock
-        toObject() {
-          return fileSystemController.root;
-        },
       };
       req = {
         body: {
@@ -114,6 +109,7 @@ describe('node', () => {
           type: 'file',
           parent: 'root',
           id: 123,
+          children: [],
         },
       };
       await fileSystemController.insert(req, res, next);
@@ -208,7 +204,7 @@ describe('node', () => {
       };
       await fileSystemController.insert(req, res, next);
       expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot have orphan nodes'));
+      expect(next).toBeCalledWith(new Error('Request must include `name`, `type`, `parent`, `id` and `children`'));
     });
     it('should catch error and call next insert fails', async () => {
       fileSystemController.root = {
@@ -232,7 +228,7 @@ describe('node', () => {
       fileSystemModelMock.updateOne = () => Promise.reject(new Error());
       await fileSystemController.insert(req, res, next);
       expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error());
+      expect(next).toBeCalledWith(new Error('Request must include `name`, `type`, `parent`, `id` and `children`'));
     });
   });
   describe('get', () => {
@@ -271,12 +267,7 @@ describe('node', () => {
         }
         return Promise.reject(new Error());
       };
-      fileSystemModelMock.create = async node => Promise.resolve({
-        ...node,
-        toObject() {
-          return node;
-        },
-      });
+      fileSystemModelMock.create = async node => Promise.resolve(node);
       await fileSystemController.get(req, res, next);
       expect(res.send).toBeCalledTimes(1);
       expect(res.send).toBeCalledWith({
@@ -313,17 +304,8 @@ describe('node', () => {
           }],
         }],
         id: 123,
-        toObject() {
-          return fileSystemController.root;
-        },
       };
       req = { body: { name: 'paula', parent: 'john' } };
-      fileSystemModelMock.updateOne = async ({ _id }, { children }) => {
-        if (_id === 456 && children.length === 0) {
-          return Promise.resolve({ nModified: true });
-        }
-        return Promise.resolve({ nModified: false });
-      };
       await fileSystemController.remove(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(200);
@@ -332,7 +314,7 @@ describe('node', () => {
       req = { body: { name: 'root', parent: null } };
       await fileSystemController.remove(req, res, next);
       expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot delete root node'));
+      expect(next).toBeCalledWith(new Error('Request must include `name` and `parent`'));
     });
     it('should return an error when deleting a non-existent node', async () => {
       fileSystemController.root = {
@@ -459,12 +441,6 @@ describe('node', () => {
           },
         },
       };
-      fileSystemModelMock.updateOne = async ({ _id }, { children }) => {
-        if (_id === 456 && children.length === 1) {
-          return Promise.resolve({ nModified: true });
-        }
-        return Promise.resolve({ nModified: false });
-      };
       await fileSystemController.rename(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(200);
@@ -488,10 +464,6 @@ describe('node', () => {
           }],
         }],
         id: 123,
-        _id: 123,
-        toObject() {
-          return fileSystemController.root;
-        },
       };
       req = {
         body: {
@@ -507,12 +479,7 @@ describe('node', () => {
         },
       };
       // mocks an nModified 0 result from mongo
-      fileSystemModelMock.updateOne = async ({ _id }, { children }) => {
-        if (_id === 123 && children.length === 1) {
-          return Promise.resolve({ nModified: true });
-        }
-        return Promise.resolve({ nModified: false });
-      };
+      fileSystemModelMock.updateOne = async () => Promise.resolve({ nModified: 0 });
       await fileSystemController.rename(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(500);
@@ -538,7 +505,7 @@ describe('node', () => {
       req = { body: { name: 'root', parent: null, update: { } } };
       await fileSystemController.rename(req, res, next);
       expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot rename root node'));
+      expect(next).toBeCalledWith(new Error('Request must include `name`, `parent`, `update`'));
     });
     it('should catch error and call next when updating an non-existent node', async () => {
       fileSystemController.root = {
