@@ -7,7 +7,7 @@ let fileSystemModelMock;
 let fileSystemController;
 
 beforeEach(() => {
-  const rootNode = {
+  const tree = {
     _id: '100',
     name: 'root',
     type: 'dir',
@@ -16,10 +16,10 @@ beforeEach(() => {
   };
   fileSystemModelMock = {
     create() {
-      return Promise.resolve(rootNode);
+      return Promise.resolve(tree);
     },
     findOne() {
-      return Promise.resolve(rootNode);
+      return Promise.resolve(tree);
     },
     updateOne() {
       return Promise.resolve({ nModified: true });
@@ -49,7 +49,7 @@ describe('node', () => {
     });
     it('should return an existing tree', async () => {
       req = { body: { name: 'john', parent: 'root' } };
-      fileSystemController.root = {
+      fileSystemController.tree = {
         id: '100',
         name: 'root',
         type: 'dir',
@@ -67,10 +67,10 @@ describe('node', () => {
           }],
         }],
       };
-      fileSystemModelMock.findOne = async () => Promise.resolve(fileSystemController.root);
+      fileSystemModelMock.findOne = async () => Promise.resolve(fileSystemController.tree);
       await fileSystemController.get(req, res, next);
       expect(res.send).toBeCalledTimes(1);
-      expect(res.send).toBeCalledWith(fileSystemController.root);
+      expect(res.send).toBeCalledWith(fileSystemController.tree);
     });
     it('should catch error and call next when currentTree throws', async () => {
       fileSystemController.currentTree = () => {
@@ -95,7 +95,7 @@ describe('node', () => {
       await fileSystemController.insert(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(200);
-      fileSystemController.root = null;
+      fileSystemController.tree = null;
       req = {
         body: {
           id: null,
@@ -110,7 +110,7 @@ describe('node', () => {
       expect(res.sendStatus).toBeCalledWith(200);
     });
     it('should return a 500 status if updateOne does not modify root node', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -132,7 +132,7 @@ describe('node', () => {
       expect(res.sendStatus).toBeCalledWith(500);
     });
     it('should return an error when parameters are invalid', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -167,7 +167,7 @@ describe('node', () => {
       expect(next).toBeCalledWith(new Error('Cannot find parent node'));
     });
     it('should return an error when adding duplicate children', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         id: null,
         name: 'root',
@@ -195,7 +195,7 @@ describe('node', () => {
       expect(next).toBeCalledWith(new Error('Cannot add duplicate children'));
     });
     it('should return an error when inserting into a parent with type `file`', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -225,7 +225,7 @@ describe('node', () => {
   });
   describe('remove', () => {
     it('should return a node', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -260,7 +260,7 @@ describe('node', () => {
       }]);
     });
     it('should return a 500 status if updateOne does not modify root node', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -303,7 +303,7 @@ describe('node', () => {
       expect(next).toBeCalledWith(new Error('Cannot find parent node'));
     });
     it('should return an error when removing a non-existent node', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -324,7 +324,7 @@ describe('node', () => {
   });
   describe('rename', () => {
     it('should return a 200 status', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -361,7 +361,7 @@ describe('node', () => {
       expect(res.sendStatus).toBeCalledWith(200);
     });
     it('should return a 500 status if updateOne does not modify root node', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -392,7 +392,7 @@ describe('node', () => {
       expect(next).toBeCalledWith(new Error('Request must include `name`, `parent`, `update`'));
     });
     it('should return an error when attemtping to update root node', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -412,7 +412,7 @@ describe('node', () => {
       expect(next).toBeCalledWith(new Error('Cannot rename root node'));
     });
     it('should return an error when unable to find parent node', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',
@@ -431,7 +431,7 @@ describe('node', () => {
       expect(next).toBeCalledWith(new Error('Cannot find parent node'));
     });
     it('should return an error when adding duplicate children', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         id: null,
         name: 'root',
@@ -468,7 +468,7 @@ describe('node', () => {
       expect(next).toBeCalledWith(new Error('Cannot add duplicate children'));
     });
     it('should return an error when updating an non-existent node', async () => {
-      fileSystemController.root = {
+      fileSystemController.tree = {
         _id: '100',
         name: 'root',
         type: 'dir',

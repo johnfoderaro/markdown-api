@@ -2,7 +2,7 @@ class FileSystemController {
   constructor(model) {
     this.queue = [];
     this.model = model;
-    this.root = null;
+    this.tree = null;
     this.dequeue = this.dequeue.bind(this);
     this.enqueue = this.enqueue.bind(this);
     this.currentTree = this.currentTree.bind(this);
@@ -32,14 +32,14 @@ class FileSystemController {
       parent: null,
       children: [],
     };
-    this.root = await this.model.findOne(find) || await this.model.create(create);
+    this.tree = await this.model.findOne(find) || await this.model.create(create);
     return true;
   }
 
   async get(req, res, next) {
     try {
       await this.currentTree();
-      return res.send(this.root);
+      return res.send(this.tree);
     } catch (error) {
       return next(error);
     }
@@ -54,7 +54,7 @@ class FileSystemController {
       const hasId = body.id || body.id === null;
       const hasChildren = body.children;
       const isValid = hasName && hasType && hasParent && hasId && hasChildren;
-      if (!this.root) {
+      if (!this.tree) {
         await this.currentTree();
       }
       if (!isValid) {
@@ -84,8 +84,8 @@ class FileSystemController {
         children: body.children,
       });
 
-      const { _id } = this.root;
-      const { nModified } = await this.model.updateOne({ _id }, { children: this.root.children });
+      const { _id } = this.tree;
+      const { nModified } = await this.model.updateOne({ _id }, { children: this.tree.children });
       return nModified ? await this.currentTree() && res.sendStatus(200) : res.sendStatus(500);
     } catch (error) {
       return next(error);
@@ -99,7 +99,7 @@ class FileSystemController {
       const hasParent = body.parent;
       const isValid = hasName && hasParent;
 
-      if (!this.root) {
+      if (!this.tree) {
         await this.currentTree();
       }
       if (!isValid) {
@@ -123,8 +123,8 @@ class FileSystemController {
 
       const removed = children.splice(index, 1);
 
-      const { _id } = this.root;
-      const { nModified } = await this.model.updateOne({ _id }, { children: this.root.children });
+      const { _id } = this.tree;
+      const { nModified } = await this.model.updateOne({ _id }, { children: this.tree.children });
       return nModified ? await this.currentTree() && res.send(removed) : res.sendStatus(500);
     } catch (error) {
       return next(error);
@@ -139,7 +139,7 @@ class FileSystemController {
       const hasUpdate = body.update;
       const isValid = hasName && hasParent && hasUpdate;
 
-      if (!this.root) {
+      if (!this.tree) {
         await this.currentTree();
       }
       if (!isValid) {
@@ -171,8 +171,8 @@ class FileSystemController {
         const before = child;
         before.parent = body.update.name;
       });
-      const { _id } = this.root;
-      const { nModified } = await this.model.updateOne({ _id }, { children: this.root.children });
+      const { _id } = this.tree;
+      const { nModified } = await this.model.updateOne({ _id }, { children: this.tree.children });
       return nModified ? await this.currentTree() && res.sendStatus(200) : res.sendStatus(500);
     } catch (error) {
       return next(error);
@@ -181,7 +181,7 @@ class FileSystemController {
 
   async traverse(destination) {
     let current;
-    this.enqueue(this.root);
+    this.enqueue(this.tree);
     current = this.dequeue();
     while (current) {
       for (let n = 0; n < current.children.length; n += 1) {
