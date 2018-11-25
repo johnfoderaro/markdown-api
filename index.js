@@ -10,7 +10,7 @@ const port = 3000;
 app.use(express.json());
 app.use('/file', fileRouter);
 app.use('/filesystem', fileSystem);
-app.listen(port, () => console.log(`express istending on ${port}`));
+app.listen(port, () => console.log(`express is listening on ${port}`));
 
 mongoose.connect('mongodb://localhost/node-test', { useNewUrlParser: true });
 const db = mongoose.connection;
