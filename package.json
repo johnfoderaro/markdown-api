@@ -9,6 +9,7 @@
     "start": "nodemon index"
   },
   "jest": {
+    "testEnvironment": "node",
     "collectCoverage": true,
     "collectCoverageFrom": [
       "controller/**/*.js",
@@ -37,13 +38,13 @@
   "homepage": "https://github.com/johnfoderaro/markdown-api#readme",
   "dependencies": {
     "express": "^4.16.4",
-    "mongoose": "^5.3.9"
+    "mongoose": "^5.3.13"
   },
   "devDependencies": {
-    "eslint": "^5.8.0",
+    "eslint": "^5.9.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.14.0",
     "jest": "^23.6.0",
-    "nodemon": "^1.18.5"
+    "nodemon": "^1.18.6"
   }
 }
