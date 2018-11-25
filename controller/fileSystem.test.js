@@ -221,7 +221,6 @@ describe('node', () => {
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Cannot add child to node type of `file`'));
     });
-
   });
   describe('remove', () => {
     it('should return a node', async () => {
@@ -405,7 +404,6 @@ describe('node', () => {
           children: [],
         }],
       };
-      // FIXME do we need this since parent is required but root.parent is null?
       req = { body: { name: 'root', parent: '100', update: { } } };
       await fileSystemController.rename(req, res, next);
       expect(next).toBeCalledTimes(1);
@@ -486,10 +484,6 @@ describe('node', () => {
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Cannot find node to rename'));
     });
-
-
-
-
   });
 });
 
