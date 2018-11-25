@@ -3,13 +3,11 @@ class FileSystemController {
     this.queue = [];
     this.model = model;
     this.root = null;
-    this.db = this.db.bind(this);
     this.dequeue = this.dequeue.bind(this);
     this.enqueue = this.enqueue.bind(this);
     this.currentTree = this.currentTree.bind(this);
     this.get = this.get.bind(this);
     this.insert = this.insert.bind(this);
-    this.move = this.move.bind(this);
     this.remove = this.remove.bind(this);
     this.rename = this.rename.bind(this);
     this.traverse = this.traverse.bind(this);
@@ -21,12 +19,6 @@ class FileSystemController {
 
   enqueue(item) {
     this.queue.push(item);
-  }
-
-  async db(res) {
-    const { _id, children } = this.root;
-    const { nModified } = await this.model.updateOne({ _id }, { children });
-    return nModified ? await this.currentTree() && res.sendStatus(200) : res.sendStatus(500);
   }
 
   async currentTree() {
@@ -62,7 +54,6 @@ class FileSystemController {
       const hasId = body.id || body.id === null;
       const hasChildren = body.children;
       const isValid = hasName && hasType && hasParent && hasId && hasChildren;
-
       if (!this.root) {
         await this.currentTree();
       }
@@ -71,6 +62,10 @@ class FileSystemController {
       }
 
       const current = await this.traverse(body.parent);
+      if (!current) {
+        throw new Error('Cannot find parent node');
+      }
+
       const { children, type } = current;
       const duplicate = children.find(child => child.name === body.name) || false;
 
@@ -89,7 +84,9 @@ class FileSystemController {
         children: body.children,
       });
 
-      return this.db(res);
+      const { _id } = this.root;
+      const { nModified } = await this.model.updateOne({ _id }, { children: this.root.children });
+      return nModified ? await this.currentTree() && res.sendStatus(200) : res.sendStatus(500);
     } catch (error) {
       return next(error);
     }
@@ -124,9 +121,11 @@ class FileSystemController {
         throw new Error('Cannot find node to delete');
       }
 
-      children.splice(index, 1);
+      const removed = children.splice(index, 1);
 
-      return this.db(res);
+      const { _id } = this.root;
+      const { nModified } = await this.model.updateOne({ _id }, { children: this.root.children });
+      return nModified ? await this.currentTree() && res.send(removed) : res.sendStatus(500);
     } catch (error) {
       return next(error);
     }
@@ -156,6 +155,11 @@ class FileSystemController {
       }
 
       const { children } = current;
+      const duplicate = children.find(child => child.name === body.update.name) || false;
+      if (duplicate) {
+        throw new Error('Cannot add duplicate children');
+      }
+
       const index = children.map(child => child.name).indexOf(body.name);
 
       if (index < 0) {
@@ -167,67 +171,9 @@ class FileSystemController {
         const before = child;
         before.parent = body.update.name;
       });
-      return this.db(res);
-    } catch (error) {
-      return next(error);
-    }
-  }
-
-  async move(req, res, next) {
-    try {
-      const { body } = req;
-      const hasId = body.id || body.id === null;
-      const hasName = body.name;
-      const hasParent = body.parent;
-      const hasUpdate = body.update;
-      const isValid = hasId && hasName && hasParent && hasUpdate;
-
-      if (!this.root) {
-        await this.currentTree();
-      }
-      if (!isValid) {
-        throw new Error('Request must include `id`, `name`, `type`, and `parent`');
-      }
-      if (body.name === 'root') {
-        throw new Error('Cannot move root node');
-      }
-
-      const currentParent = await this.traverse(body.parent);
-      if (!currentParent) {
-        throw new Error('Cannot find parent node');
-      }
-
-      const currentChildren = currentParent.children;
-      const index = currentChildren.map(child => child.name).indexOf(body.name);
-
-      if (index < 0) {
-        throw new Error('Cannot find node to move');
-      }
-
-      const toUpdate = currentChildren[index];
-      const newParent = await this.traverse(body.update.parent);
-      const newChildren = newParent.children;
-      const newType = newParent.type;
-      const newDuplicate = newChildren.find(child => child.name === body.name) || false;
-
-      if (newDuplicate) {
-        throw new Error('Cannot add duplicate children');
-      }
-      if (newType === 'file') {
-        throw new Error('Cannot add child to node type of `file`');
-      }
-
-      toUpdate.parent = body.update.parent;
-      currentChildren.splice(index, 1);
-      newChildren.push({
-        id: toUpdate.id,
-        name: toUpdate.name,
-        type: toUpdate.type,
-        parent: toUpdate.parent,
-        children: toUpdate.children,
-      });
-
-      return this.db(res);
+      const { _id } = this.root;
+      const { nModified } = await this.model.updateOne({ _id }, { children: this.root.children });
+      return nModified ? await this.currentTree() && res.sendStatus(200) : res.sendStatus(500);
     } catch (error) {
       return next(error);
     }
