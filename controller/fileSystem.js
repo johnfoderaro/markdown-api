@@ -54,6 +54,7 @@ class FileSystemController {
       const hasId = body.id || body.id === null;
       const hasChildren = body.children;
       const isValid = hasName && hasType && hasParent && hasId && hasChildren;
+
       if (!this.tree) {
         await this.currentTree();
       }

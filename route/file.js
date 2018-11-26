@@ -6,15 +6,15 @@ const FileModel = require('../model/file');
 const router = express.Router();
 
 const {
-  addFile,
-  deleteFile,
-  getFile,
-  renameFile,
+  get,
+  insert,
+  remove,
+  rename,
 } = new FileController(FileModel);
 
-router.get('/get/:id', getFile);
-router.post('/add', addFile);
-router.delete('/delete', deleteFile);
-router.put('/rename', renameFile);
+router.get('/get/:id', get);
+router.post('/insert', insert);
+router.delete('/remove', remove);
+router.put('/rename', rename);
 
 module.exports = router;

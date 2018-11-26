@@ -9,31 +9,16 @@ let fileController;
 beforeEach(() => {
   fileModelMock = {
     create({ name, data }) {
-      return new Promise((resolve, reject) => {
-        if (name && data) return resolve(true);
-        return reject(new Error());
-      });
+      return Promise.resolve({ _id: '100', name, data });
     },
-    deleteOne({ _id }) {
-      return new Promise((resolve, reject) => {
-        if (_id === 123) return resolve({ n: 1 });
-        if (_id === 345) return resolve({ n: 0 });
-        return reject(new Error());
-      });
+    deleteOne() {
+      return Promise.resolve({ n: 1 });
     },
-    findById(id) {
-      return new Promise((resolve, reject) => {
-        if (id === 123) return resolve(true);
-        if (id === 345) return resolve(false);
-        return reject(new Error());
-      });
+    findById() {
+      return Promise.resolve({ name: 'file1', data: 'data' });
     },
-    updateOne({ _id }, { name, data }) {
-      return new Promise((resolve, reject) => {
-        if (_id === 123 && name && data) return resolve({ nModified: 1 });
-        if (_id === 345 && name && data) return resolve({ nModified: 0 });
-        return reject(new Error());
-      });
+    updateOne() {
+      return Promise.resolve({ nModified: 1 });
     },
   };
   res = {
@@ -45,67 +30,88 @@ beforeEach(() => {
 });
 
 describe('file', () => {
-  describe('addFile', () => {
-    it('should return call res.sendStatus', async () => {
-      req = { body: { name: 'fileA', data: '123' } };
-      await fileController.addFile(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-    });
-    it('should catch an error and call next', async () => {
-      req = { body: { data: '123' } };
-      await fileController.addFile(req, res, next);
-      expect(next).toBeCalledTimes(1);
-    });
-  });
-  describe('deleteFile', () => {
-    it('should call res.sendStatus', async () => {
-      req = { body: { id: 123 } };
-      await fileController.deleteFile(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-    });
-    it('should call res.sendStatus', async () => {
-      req = { body: { id: 345 } };
-      await fileController.deleteFile(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-    });
-    it('should catch an error and call next', async () => {
-      req = { body: { id: null } };
-      await fileController.deleteFile(req, res, next);
-      expect(next).toBeCalledTimes(1);
-    });
-  });
-  describe('getFile', () => {
-    it('should get a document and call res.send', async () => {
-      req = { params: { id: 123 } };
-      await fileController.getFile(req, res, next);
+  describe('get', () => {
+    it('should return a document', async () => {
+      req = { params: { id: '100' } };
+      await fileController.get(req, res, next);
       expect(res.send).toBeCalledTimes(1);
+      expect(res.send).toBeCalledWith({ name: 'file1', data: 'data' });
     });
-    it('should call res.sendStatus', async () => {
-      req = { params: { id: 345 } };
-      await fileController.getFile(req, res, next);
+    it('should return a 404 status if findById fails', async () => {
+      req = { params: { id: '100' } };
+      fileModelMock.findById = () => null;
+      await fileController.get(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(404);
     });
-    it('should catch an error and call next', async () => {
+    it('should return an error when parameters are invalid', async () => {
       req = { params: { id: null } };
-      await fileController.getFile(req, res, next);
+      await fileController.get(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Request must include `id` parameter'));
+    });
+  });
+  describe('insert', () => {
+    it('should return a document id', async () => {
+      req = { body: { name: 'fileA', data: 'fileA' } };
+      await fileController.insert(req, res, next);
+      expect(res.send).toBeCalledTimes(1);
+      expect(res.send).toBeCalledWith({ id: '100' });
+    });
+    it('should return a 500 status if create fails', async () => {
+      req = { body: { name: 'fileA', data: 'fileA' } };
+      fileModelMock.create = () => {
+        throw new Error();
+      };
+      await fileController.insert(req, res, next);
+      expect(next).toBeCalledTimes(1);
+    });
+    it('should return an error when parameters are invalid', async () => {
+      req = { body: { name: 'fileA' } };
+      await fileController.insert(req, res, next);
       expect(next).toBeCalledTimes(1);
     });
   });
-  describe('renameFile', () => {
-    it('should call res.sendStatus', async () => {
-      req = { body: { id: 123, name: 'fileA', data: '123' } };
-      await fileController.renameFile(req, res, next);
+  describe('remove', () => {
+    it('should return a 200 status', async () => {
+      req = { body: { id: '100' } };
+      await fileController.remove(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(200);
     });
-    it('should call res.sendStatus', async () => {
-      req = { body: { id: 345, name: 'fileA', data: '123' } };
-      await fileController.renameFile(req, res, next);
+    it('should return a 404 status if deleteOne fails', async () => {
+      req = { body: { id: '100' } };
+      fileModelMock.deleteOne = () => ({ nModified: 0 });
+      await fileController.remove(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(404);
     });
-    it('should catch an error and call next', async () => {
-      req = { body: { id: null, name: 'fileA', data: '123' } };
-      await fileController.renameFile(req, res, next);
+    it('should return an error when parameters are invalid', async () => {
+      req = { body: { } };
+      await fileController.remove(req, res, next);
       expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Request must include `id`'));
+    });
+  });
+
+  describe('rename', () => {
+    it('should return a 200 status', async () => {
+      req = { body: { id: '100', update: { name: 'fileA' } } };
+      await fileController.rename(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+    });
+    it('should return a 404 status if updateOne fails', async () => {
+      req = { body: { id: '100', update: { name: 'fileA' } } };
+      fileModelMock.updateOne = () => ({ nModified: 0 });
+      await fileController.rename(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(404);
+    });
+    it('should return an error when parameters are invalid', async () => {
+      req = { body: { } };
+      await fileController.rename(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Request must include `id` and `update`'));
     });
   });
 });
