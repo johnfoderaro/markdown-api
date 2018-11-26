@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema.Types;
 
 const fileSystemSchema = new mongoose.Schema({
+  id: {
+    type: ObjectId,
+  },
   name: {
     type: String,
     lowercase: true,
@@ -22,10 +25,7 @@ const fileSystemSchema = new mongoose.Schema({
     lowercase: true,
     required: [true, '`children` is required'],
   },
-  id: {
-    type: ObjectId,
-  },
-});
+}, { collection: 'markdown-api filesystem' });
 
 const FileSystem = mongoose.model('FileSystem', fileSystemSchema);
 

@@ -27,6 +27,7 @@ class FileSystemController {
       parent: null,
     };
     const create = {
+      id: null,
       name: 'root',
       type: 'dir',
       parent: null,
@@ -39,7 +40,20 @@ class FileSystemController {
   async get(req, res, next) {
     try {
       await this.currentTree();
-      return res.send(this.tree);
+      const {
+        id,
+        name,
+        type,
+        parent,
+        children,
+      } = this.tree;
+      return res.send({
+        id,
+        name,
+        type,
+        parent,
+        children,
+      });
     } catch (error) {
       return next(error);
     }
@@ -48,10 +62,10 @@ class FileSystemController {
   async insert(req, res, next) {
     try {
       const { body } = req;
+      const hasId = body.id || body.id === null;
       const hasName = body.name;
       const hasType = body.type;
       const hasParent = body.parent;
-      const hasId = body.id || body.id === null;
       const hasChildren = body.children;
       const isValid = hasName && hasType && hasParent && hasId && hasChildren;
 
@@ -60,6 +74,9 @@ class FileSystemController {
       }
       if (!isValid) {
         throw new Error('Request must include `name`, `type`, `parent`, `id` and `children`');
+      }
+      if (body.type === 'file' && !body.id) {
+        throw new Error('File type must include an `id` value of Mongo ObjectID string');
       }
 
       const current = await this.traverse(body.parent);
@@ -172,6 +189,7 @@ class FileSystemController {
         const before = child;
         before.parent = body.update.name;
       });
+
       const { _id } = this.tree;
       const { nModified } = await this.model.updateOne({ _id }, { children: this.tree.children });
       return nModified ? await this.currentTree() && res.sendStatus(200) : res.sendStatus(500);

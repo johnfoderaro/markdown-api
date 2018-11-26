@@ -9,7 +9,7 @@ const fileSchema = new mongoose.Schema({
   data: {
     type: String,
   },
-});
+}, { collection: 'markdown-api files' });
 
 const FileModel = mongoose.model('File', fileSchema);
 

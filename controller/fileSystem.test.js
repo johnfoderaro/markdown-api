@@ -9,6 +9,7 @@ let fileSystemController;
 beforeEach(() => {
   const tree = {
     _id: '100',
+    id: null,
     name: 'root',
     type: 'dir',
     parent: null,
@@ -40,7 +41,7 @@ describe('node', () => {
       await fileSystemController.get(req, res, next);
       expect(res.send).toBeCalledTimes(1);
       expect(res.send).toBeCalledWith({
-        _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -50,7 +51,7 @@ describe('node', () => {
     it('should return an existing tree', async () => {
       req = { body: { name: 'john', parent: 'root' } };
       fileSystemController.tree = {
-        id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -112,6 +113,7 @@ describe('node', () => {
     it('should return a 500 status if updateOne does not modify root node', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -134,6 +136,7 @@ describe('node', () => {
     it('should return an error when parameters are invalid', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -147,10 +150,31 @@ describe('node', () => {
           parent: 'root',
         },
       };
-      fileSystemModelMock.updateOne = () => Promise.reject(new Error());
       await fileSystemController.insert(req, res, next);
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Request must include `name`, `type`, `parent`, `id` and `children`'));
+    });
+    it('should return an error when `type` file does not have `id`', async () => {
+      fileSystemController.tree = {
+        _id: '100',
+        id: null,
+        name: 'root',
+        type: 'dir',
+        parent: null,
+        children: [],
+      };
+      req = {
+        body: {
+          id: null,
+          name: 'file1',
+          type: 'file',
+          parent: 'root',
+          children: [],
+        },
+      };
+      await fileSystemController.insert(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('File type must include an `id` value of Mongo ObjectID string'));
     });
     it('should return an error when unable to find parent node', async () => {
       req = {
@@ -197,6 +221,7 @@ describe('node', () => {
     it('should return an error when inserting into a parent with type `file`', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -226,6 +251,7 @@ describe('node', () => {
     it('should return a node', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -261,6 +287,7 @@ describe('node', () => {
     it('should return a 500 status if updateOne does not modify root node', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -304,6 +331,7 @@ describe('node', () => {
     it('should return an error when removing a non-existent node', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -325,6 +353,7 @@ describe('node', () => {
     it('should return a 200 status', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -362,6 +391,7 @@ describe('node', () => {
     it('should return a 500 status if updateOne does not modify root node', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -393,6 +423,7 @@ describe('node', () => {
     it('should return an error when attemtping to update root node', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -412,6 +443,7 @@ describe('node', () => {
     it('should return an error when unable to find parent node', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
@@ -468,6 +500,7 @@ describe('node', () => {
     it('should return an error when updating an non-existent node', async () => {
       fileSystemController.tree = {
         _id: '100',
+        id: null,
         name: 'root',
         type: 'dir',
         parent: null,
