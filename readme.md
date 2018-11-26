@@ -35,7 +35,7 @@ For example, upon initalizing this application, a tree is created or retrieved f
 {
   id: null,
   name: 'root,
-  type: 'dir'
+  type: 'dir',
   parent: null,
   children: [],
 }
