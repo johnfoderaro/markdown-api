@@ -34,7 +34,7 @@ For example, upon initalizing this application, a tree is created or retrieved f
 ```javascript
 {
   id: null,
-  name: 'root,
+  name: 'root',
   type: 'dir',
   parent: null,
   children: [],
