@@ -114,6 +114,27 @@ describe('file', () => {
       expect(next).toBeCalledWith(new Error('Request must include `id` and `update`'));
     });
   });
+
+  describe('update', () => {
+    it('should return a 200 status', async () => {
+      req = { body: { id: '100', update: { data: 'updated data' } } };
+      await fileController.update(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+    });
+    it('should return a 404 status if updateOne fails', async () => {
+      req = { body: { id: '100', update: { data: 'updated data' } } };
+      fileModelMock.updateOne = () => ({ nModified: 0 });
+      await fileController.update(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(404);
+    });
+    it('should return an error when parameters are invalid', async () => {
+      req = { body: { } };
+      await fileController.update(req, res, next);
+      expect(next).toBeCalledTimes(1);
+      expect(next).toBeCalledWith(new Error('Request must include `id` and `update`'));
+    });
+  });
 });
 
 afterEach(() => jest.resetAllMocks());

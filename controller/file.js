@@ -5,6 +5,7 @@ class FileController {
     this.insert = this.insert.bind(this);
     this.remove = this.remove.bind(this);
     this.rename = this.rename.bind(this);
+    this.update = this.update.bind(this);
   }
 
   async get(req, res, next) {
@@ -68,6 +69,24 @@ class FileController {
       }
       const { id, update: { name } } = body;
       const { nModified } = await this.model.updateOne({ _id: id }, { name });
+      return nModified ? res.sendStatus(200) : res.sendStatus(404);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  async update(req, res, next) {
+    try {
+      const { body } = req;
+      const hasId = body.id;
+      const hasUpdate = body.update;
+      const isValid = hasId && hasUpdate;
+
+      if (!isValid) {
+        throw new Error('Request must include `id` and `update`');
+      }
+      const { id, update: { data } } = body;
+      const { nModified } = await this.model.updateOne({ _id: id }, { data });
       return nModified ? res.sendStatus(200) : res.sendStatus(404);
     } catch (error) {
       return next(error);
