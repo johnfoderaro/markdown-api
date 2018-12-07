@@ -18,7 +18,7 @@ beforeEach(() => {
       return Promise.resolve({ name: 'file1', data: 'data' });
     },
     updateOne() {
-      return Promise.resolve({ nModified: 1 });
+      return Promise.resolve({ n: 1, nModified: 1 });
     },
   };
   res = {
@@ -94,39 +94,54 @@ describe('file', () => {
     });
   });
 
-  describe('rename', () => {
-    it('should return a 200 status', async () => {
-      req = { body: { id: '100', update: { name: 'fileA' } } };
-      await fileController.rename(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-    });
-    it('should return a 404 status if updateOne fails', async () => {
-      req = { body: { id: '100', update: { name: 'fileA' } } };
-      fileModelMock.updateOne = () => ({ nModified: 0 });
-      await fileController.rename(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(404);
-    });
-    it('should return an error when parameters are invalid', async () => {
-      req = { body: { } };
-      await fileController.rename(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Request must include `id` and `update`'));
-    });
-  });
+  // describe('rename', () => {
+  //   it('should return a 200 status', async () => {
+  //     req = { body: { id: '100', update: { name: 'fileA' } } };
+  //     await fileController.rename(req, res, next);
+  //     expect(res.sendStatus).toBeCalledTimes(1);
+  //   });
+  //   it('should return a 404 status if updateOne fails', async () => {
+  //     req = { body: { id: '100', update: { name: 'fileA' } } };
+  //     fileModelMock.updateOne = () => ({ nModified: 0 });
+  //     await fileController.rename(req, res, next);
+  //     expect(res.sendStatus).toBeCalledTimes(1);
+  //     expect(res.sendStatus).toBeCalledWith(404);
+  //   });
+  //   it('should return an error when parameters are invalid', async () => {
+  //     req = { body: { } };
+  //     await fileController.rename(req, res, next);
+  //     expect(next).toBeCalledTimes(1);
+  //     expect(next).toBeCalledWith(new Error('Request must include `id` and `update`'));
+  //   });
+  // });
 
   describe('update', () => {
     it('should return a 200 status', async () => {
-      req = { body: { id: '100', update: { data: 'updated data' } } };
+      req = { body: { id: '100', update: { name: '', data: 'updated data' } } };
       await fileController.update(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(200);
+    });
+    it('should return a 400 status if updateOne does not update anything', async () => {
+      req = { body: { id: '100', update: { name: '', data: 'updated data' } } };
+      fileModelMock.updateOne = jest.fn(() => ({ n: 1, nModified: 0 }));
+      await fileController.update(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(400);
     });
     it('should return a 404 status if updateOne fails', async () => {
       req = { body: { id: '100', update: { data: 'updated data' } } };
-      fileModelMock.updateOne = () => ({ nModified: 0 });
+      fileModelMock.updateOne = jest.fn(() => ({ n: 0, nModified: 0 }));
       await fileController.update(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(404);
+    });
+    it('should return a 500 status if result isn not success, not not found, not bad request', async () => {
+      req = { body: { id: '100', update: { data: 'updated data' } } };
+      fileModelMock.updateOne = jest.fn(() => ({ n: 2, nModified: 0 }));
+      await fileController.update(req, res, next);
+      expect(res.sendStatus).toBeCalledTimes(1);
+      expect(res.sendStatus).toBeCalledWith(500);
     });
     it('should return an error when parameters are invalid', async () => {
       req = { body: { } };

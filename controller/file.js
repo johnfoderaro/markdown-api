@@ -4,7 +4,6 @@ class FileController {
     this.get = this.get.bind(this);
     this.insert = this.insert.bind(this);
     this.remove = this.remove.bind(this);
-    this.rename = this.rename.bind(this);
     this.update = this.update.bind(this);
   }
 
@@ -57,24 +56,6 @@ class FileController {
     }
   }
 
-  async rename(req, res, next) {
-    try {
-      const { body } = req;
-      const hasId = body.id;
-      const hasUpdate = body.update;
-      const isValid = hasId && hasUpdate;
-
-      if (!isValid) {
-        throw new Error('Request must include `id` and `update`');
-      }
-      const { id, update: { name } } = body;
-      const { nModified } = await this.model.updateOne({ _id: id }, { name });
-      return nModified ? res.sendStatus(200) : res.sendStatus(404);
-    } catch (error) {
-      return next(error);
-    }
-  }
-
   async update(req, res, next) {
     try {
       const { body } = req;
@@ -85,20 +66,25 @@ class FileController {
       if (!isValid) {
         throw new Error('Request must include `id` and `update`');
       }
-      const { id, update: { data } } = body;
 
-      // success n: 1, nModified: 1, ok: 1
-      // dupe n: 1, nModified: 0, ok: 1
-      // 404 n: 0, nModified: 0, ok: 1
-      const { n, nModified } = await this.model.updateOne({ _id: id }, { data });
-      const success = n && nModified;
-      const notFound = !n && !nModified;
-      const badRequest = n && !nModified;
-      if (success) return res.sendStatus(200);
-      if (notFound) return res.sendStatus(404);
-      if (badRequest) return res.sendStatus(400);
+      const { id, update: { name, data } } = body;
+      const { n, nModified } = await this.model.updateOne({ _id: id }, { name, data });
+
+      const success = n === 1 && nModified === 1;
+      const notFound = n === 0 && nModified === 0;
+      const badRequest = n === 1 && nModified === 0;
+
+      if (success) {
+        return res.sendStatus(200);
+      }
+      if (notFound) {
+        return res.sendStatus(404);
+      }
+      if (badRequest) {
+        return res.sendStatus(400);
+      }
+
       return res.sendStatus(500);
-      // return nModified ? res.sendStatus(200) : res.sendStatus(404);
     } catch (error) {
       return next(error);
     }

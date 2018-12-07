@@ -225,12 +225,20 @@ HTTP DELETE request that returns a 200 status code upon successful removal of th
 
 200 or 500 HTTP status code.
 
-#### `/file/rename/`
+#### `/file/update/`
 
-HTTP PUT request that returns a 200 status code upon successful updating of an existing document form MongoDB, or a 404 status code upon unsuccessful updating where `updateOne` in MongoDB returns `{ nModified: 0 }` due to the document not being found. The request format is JSON and must contain the following parameters:
+HTTP PUT request that returns a 200 status code upon successful updating of an existing document form MongoDB where the name and or data is updated. Otherwise, it returns the following when `updateOne` in MongoDB returns:
+
+- `{ n: 1, nModified: 0 }` results in a 400 status code
+- `{ n: 0, nModified: 0 }` results in a 404 status code
+- none of the above results in a 500 status code
+
+The request format is JSON and must contain the following parameters:
 
 - id
 - update
+- - name
+- - data
 
 ##### Example request
 
@@ -238,20 +246,16 @@ HTTP PUT request that returns a 200 status code upon successful updating of an e
 {
   "id": "5bfb198c277d421ce9d8d876",
   "update": {
-    "name": "file02"
+    "name": "file02",
+    "data": "file 2 new data
   }
 }
 ```
 
 ##### Example response
 
-```json
-{
-  "id": "5bfb198c277d421ce9d8d876",
-  "name": "file02",
-  "data": "contents of file01"
-}
-```
+200, 400, 404, or 500 HTTP status code.
+
 
 
 
