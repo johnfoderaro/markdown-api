@@ -86,8 +86,19 @@ class FileController {
         throw new Error('Request must include `id` and `update`');
       }
       const { id, update: { data } } = body;
-      const { nModified } = await this.model.updateOne({ _id: id }, { data });
-      return nModified ? res.sendStatus(200) : res.sendStatus(404);
+
+      // success n: 1, nModified: 1, ok: 1
+      // dupe n: 1, nModified: 0, ok: 1
+      // 404 n: 0, nModified: 0, ok: 1
+      const { n, nModified } = await this.model.updateOne({ _id: id }, { data });
+      const success = n && nModified;
+      const notFound = !n && !nModified;
+      const badRequest = n && !nModified;
+      if (success) return res.sendStatus(200);
+      if (notFound) return res.sendStatus(404);
+      if (badRequest) return res.sendStatus(400);
+      return res.sendStatus(500);
+      // return nModified ? res.sendStatus(200) : res.sendStatus(404);
     } catch (error) {
       return next(error);
     }
