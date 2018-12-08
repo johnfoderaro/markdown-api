@@ -116,7 +116,23 @@ Array of children nodes. For node `type` of `file`, which cannot have children, 
 
 ##### Example response
 
-200 or 500 HTTP status code.
+```json
+{
+  "id": null,
+  "name": "root",
+  "type": "dir",
+  "parent": null,
+  "children": [
+    {
+      "id": null,
+      "name": "dirA",
+      "type": "dir",
+      "parent": "root",
+      "children": []
+    }
+  ]
+}
+```
 
 #### `/filesystem/remove/`
 
@@ -136,11 +152,19 @@ HTTP DELETE request that returns a 200 status code upon successful removal of th
 
 ##### Example response
 
-200 or 500 HTTP status code.
+```json
+{
+  "id": null,
+  "name": "root",
+  "type": "dir",
+  "parent": null,
+  "children": []
+}
+```
 
 #### `/filesystem/rename/`
 
-HTTP PUT request that returns a 200 status code upon successful updating of an existing node from the file system tree document, or a 500 status code upon unsuccessful updating where `updateOne` in MongoDB returns `{ nModified: 0 }`. The request format is JSON and must contain the following parameters:
+HTTP PUT request that returns an updated tree upon successful updating of an existing node from the file system tree document, or a 400 status code upon unsuccessful updating where `updateOne` in MongoDB returns `{ nModified: 0 }`. The request format is JSON and must contain the following parameters:
 
 - name
 - parent
@@ -160,7 +184,23 @@ HTTP PUT request that returns a 200 status code upon successful updating of an e
 
 ##### Example response
 
-200 or 500 HTTP status code.
+```json
+{
+  "id": null,
+  "name": "root",
+  "type": "dir",
+  "parent": null,
+  "children": [
+    {
+      "id": "5be246789927a27d9c83628f",
+      "name": "file02",
+      "type": "file",
+      "parent": "root",
+      "children": []
+    }
+  ]
+}
+```
 
 ### `/file/`
 

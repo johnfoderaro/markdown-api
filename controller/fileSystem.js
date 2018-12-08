@@ -103,8 +103,7 @@ class FileSystemController {
       });
 
       const { _id } = this.tree;
-      const { nModified } = await this.model.updateOne({ _id }, { children: this.tree.children });
-      return nModified ? await this.currentTree() && res.sendStatus(200) : res.sendStatus(500);
+      return this.update(_id, res);
     } catch (error) {
       return next(error);
     }
@@ -139,11 +138,10 @@ class FileSystemController {
         throw new Error('Cannot find node to delete');
       }
 
-      const removed = children.splice(index, 1);
+      children.splice(index, 1);
 
       const { _id } = this.tree;
-      const { nModified } = await this.model.updateOne({ _id }, { children: this.tree.children });
-      return nModified ? await this.currentTree() && res.send(removed) : res.sendStatus(500);
+      return this.update(_id, res);
     } catch (error) {
       return next(error);
     }
@@ -183,22 +181,19 @@ class FileSystemController {
       if (index < 0) {
         throw new Error('Cannot find node to rename');
       }
-
       children[index].name = body.update.name;
       children[index].children.forEach((child) => {
         const before = child;
         before.parent = body.update.name;
       });
-
       const { _id } = this.tree;
-      const { nModified } = await this.model.updateOne({ _id }, { children: this.tree.children });
-      return nModified ? await this.currentTree() && res.sendStatus(200) : res.sendStatus(500);
+      return this.update(_id, res);
     } catch (error) {
       return next(error);
     }
   }
 
-  async traverse(destination) {
+  traverse(destination) {
     let current;
     this.enqueue(this.tree);
     current = this.dequeue();
@@ -212,6 +207,11 @@ class FileSystemController {
       current = this.dequeue();
     }
     return current;
+  }
+
+  async update(_id, res) {
+    const { nModified } = await this.model.updateOne({ _id }, { children: this.tree.children });
+    return nModified ? await this.currentTree() && res.send(this.tree) : res.sendStatus(400);
   }
 }
 

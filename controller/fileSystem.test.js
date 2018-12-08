@@ -83,7 +83,7 @@ describe('node', () => {
     });
   });
   describe('insert', () => {
-    it('should return a 200 status', async () => {
+    it('should return the updated tree', async () => {
       req = {
         body: {
           id: '100',
@@ -94,23 +94,23 @@ describe('node', () => {
         },
       };
       await fileSystemController.insert(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(200);
-      fileSystemController.tree = null;
-      req = {
-        body: {
-          id: null,
-          name: 'dir1',
-          type: 'dir',
+      expect(res.send).toBeCalledTimes(1);
+      expect(res.send).toBeCalledWith({
+        _id: '100',
+        id: null,
+        name: 'root',
+        type: 'dir',
+        parent: null,
+        children: [{
+          id: '100',
+          name: 'file1',
+          type: 'file',
           parent: 'root',
           children: [],
-        },
-      };
-      await fileSystemController.insert(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(2);
-      expect(res.sendStatus).toBeCalledWith(200);
+        }],
+      });
     });
-    it('should return a 500 status if updateOne does not modify root node', async () => {
+    it('should return a 400 status if updateOne does not modify root node', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -131,7 +131,7 @@ describe('node', () => {
       fileSystemModelMock.updateOne = () => Promise.resolve({ nModified: false });
       await fileSystemController.insert(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(500);
+      expect(res.sendStatus).toBeCalledWith(400);
     });
     it('should return an error when parameters are invalid', async () => {
       fileSystemController.tree = {
@@ -248,7 +248,7 @@ describe('node', () => {
     });
   });
   describe('remove', () => {
-    it('should return a node', async () => {
+    it('should return the updated tree', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -271,20 +271,16 @@ describe('node', () => {
       req = { body: { name: 'dir1', parent: 'root' } };
       await fileSystemController.remove(req, res, next);
       expect(res.send).toBeCalledTimes(1);
-      expect(res.send).toBeCalledWith([{
-        id: '101',
-        name: 'dir1',
+      expect(res.send).toBeCalledWith({
+        _id: '100',
+        id: null,
+        name: 'root',
         type: 'dir',
-        parent: 'root',
-        children: [{
-          id: '201',
-          name: 'file1',
-          type: 'file',
-          parent: 'dir1',
-        }],
-      }]);
+        parent: null,
+        children: [],
+      });
     });
-    it('should return a 500 status if updateOne does not modify root node', async () => {
+    it('should return a 400 status if updateOne does not modify root node', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -308,7 +304,7 @@ describe('node', () => {
       fileSystemModelMock.updateOne = () => Promise.resolve({ nModified: false });
       await fileSystemController.remove(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(500);
+      expect(res.sendStatus).toBeCalledWith(400);
     });
     it('should return an error when parameters are invalid', async () => {
       req = { body: {} };
@@ -350,7 +346,7 @@ describe('node', () => {
     });
   });
   describe('rename', () => {
-    it('should return a 200 status', async () => {
+    it('should return the updated tree', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -384,11 +380,31 @@ describe('node', () => {
           },
         },
       };
+      fileSystemModelMock.findOne = async () => Promise.resolve(fileSystemController.tree);
       await fileSystemController.rename(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(200);
+      expect(res.send).toBeCalledTimes(1);
+      expect(res.send).toBeCalledWith({
+        _id: '100',
+        id: null,
+        name: 'root',
+        type: 'dir',
+        parent: null,
+        children: [{
+          id: null,
+          name: 'dirA',
+          type: 'dir',
+          parent: 'root',
+          children: [{
+            id: null,
+            name: 'dirB',
+            type: 'dir',
+            parent: 'dirA',
+            children: [],
+          }],
+        }],
+      });
     });
-    it('should return a 500 status if updateOne does not modify root node', async () => {
+    it('should return a 400 status if updateOne does not modify root node', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -412,7 +428,7 @@ describe('node', () => {
       fileSystemModelMock.updateOne = () => Promise.resolve({ nModified: false });
       await fileSystemController.rename(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(500);
+      expect(res.sendStatus).toBeCalledWith(400);
     });
     it('should return an error when parameters are invalid', async () => {
       req = { body: {} };
