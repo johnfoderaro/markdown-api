@@ -268,7 +268,7 @@ describe('node', () => {
           }],
         }],
       };
-      req = { body: { name: 'dir1', parent: 'root' } };
+      req = { params: { name: 'dir1', parent: 'root' } };
       await fileSystemController.remove(req, res, next);
       expect(res.send).toBeCalledTimes(1);
       expect(res.send).toBeCalledWith({
@@ -300,26 +300,26 @@ describe('node', () => {
           }],
         }],
       };
-      req = { body: { name: 'dir1', parent: 'root' } };
+      req = { params: { name: 'dir1', parent: 'root' } };
       fileSystemModelMock.updateOne = () => Promise.resolve({ nModified: false });
       await fileSystemController.remove(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(400);
     });
     it('should return an error when parameters are invalid', async () => {
-      req = { body: {} };
+      req = { params: {} };
       await fileSystemController.remove(req, res, next);
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Request must include `name` and `parent`'));
     });
     it('should return an error when attempting to remove the root node', async () => {
-      req = { body: { name: 'root', parent: 'null' } };
+      req = { params: { name: 'root', parent: 'null' } };
       await fileSystemController.remove(req, res, next);
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Cannot remove root node'));
     });
     it('should return an error when unable to find parent node', async () => {
-      req = { body: { name: 'file1', parent: 'dir1' } };
+      req = { params: { name: 'file1', parent: 'dir1' } };
       await fileSystemController.remove(req, res, next);
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Cannot find parent node'));
@@ -339,7 +339,7 @@ describe('node', () => {
           children: [],
         }],
       };
-      req = { body: { name: 'file2', parent: 'root' } };
+      req = { params: { name: 'file2', parent: 'root' } };
       await fileSystemController.remove(req, res, next);
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Cannot find node to delete'));

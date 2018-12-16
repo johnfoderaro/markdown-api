@@ -14,7 +14,7 @@ const {
 
 router.get('/get/:id', get);
 router.post('/insert', insert);
-router.delete('/remove', remove);
+router.delete('/remove/:id', remove);
 router.put('/update', update);
 
 module.exports = router;

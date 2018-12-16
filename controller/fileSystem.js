@@ -111,9 +111,9 @@ class FileSystemController {
 
   async remove(req, res, next) {
     try {
-      const { body } = req;
-      const hasName = body.name;
-      const hasParent = body.parent;
+      const { params } = req;
+      const hasName = params.name;
+      const hasParent = params.parent;
       const isValid = hasName && hasParent;
 
       if (!this.tree) {
@@ -122,17 +122,17 @@ class FileSystemController {
       if (!isValid) {
         throw new Error('Request must include `name` and `parent`');
       }
-      if (body.name === 'root') {
+      if (params.name === 'root') {
         throw new Error('Cannot remove root node');
       }
 
-      const current = await this.traverse(body.parent);
+      const current = await this.traverse(params.parent);
       if (!current) {
         throw new Error('Cannot find parent node');
       }
 
       const { children } = current;
-      const index = children.map(child => child.name).indexOf(body.name);
+      const index = children.map(child => child.name).indexOf(params.name);
 
       if (index < 0) {
         throw new Error('Cannot find node to delete');

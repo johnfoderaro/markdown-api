@@ -14,7 +14,7 @@ const {
 
 router.get('/get', get);
 router.post('/insert', insert);
-router.delete('/remove', remove);
+router.delete('/remove/:parent/:name', remove);
 router.put('/rename', rename);
 
 module.exports = router;

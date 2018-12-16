@@ -74,20 +74,20 @@ describe('file', () => {
   });
   describe('remove', () => {
     it('should return a 200 status', async () => {
-      req = { body: { id: '100' } };
+      req = { params: { id: '100' } };
       await fileController.remove(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(200);
     });
     it('should return a 404 status if deleteOne fails', async () => {
-      req = { body: { id: '100' } };
+      req = { params: { id: '100' } };
       fileModelMock.deleteOne = () => ({ nModified: 0 });
       await fileController.remove(req, res, next);
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(404);
     });
     it('should return an error when parameters are invalid', async () => {
-      req = { body: { } };
+      req = { params: { } };
       await fileController.remove(req, res, next);
       expect(next).toBeCalledTimes(1);
       expect(next).toBeCalledWith(new Error('Request must include `id`'));

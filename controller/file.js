@@ -43,13 +43,13 @@ class FileController {
 
   async remove(req, res, next) {
     try {
-      const { body } = req;
-      const isValid = body.id;
+      const { params } = req;
+      const isValid = params.id;
       if (!isValid) {
         throw new Error('Request must include `id`');
       }
-      const { _id } = body;
-      const { n } = await this.model.deleteOne({ _id });
+      const { id } = params;
+      const { n } = await this.model.deleteOne({ _id: id });
       return n ? res.sendStatus(200) : res.sendStatus(404);
     } catch (error) {
       return next(error);
