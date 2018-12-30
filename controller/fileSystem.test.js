@@ -133,7 +133,7 @@ describe('node', () => {
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(400);
     });
-    it('should return an error when parameters are invalid', async () => {
+    it('should return a 400 status when parameters are invalid', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -151,10 +151,9 @@ describe('node', () => {
         },
       };
       await fileSystemController.insert(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Request must include `name`, `type`, `parent`, `id` and `children`'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when `type` file does not have `id`', async () => {
+    it('should return a 400 status when `type` file does not have `id`', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -173,10 +172,9 @@ describe('node', () => {
         },
       };
       await fileSystemController.insert(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('File type must include an `id` value of Mongo ObjectID string'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when unable to find parent node', async () => {
+    it('should return a 400 status when unable to find parent node', async () => {
       req = {
         body: {
           id: '100',
@@ -187,10 +185,9 @@ describe('node', () => {
         },
       };
       await fileSystemController.insert(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot find parent node'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when adding duplicate children', async () => {
+    it('should return a 400 status when adding duplicate children', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -215,10 +212,9 @@ describe('node', () => {
         },
       };
       await fileSystemController.insert(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot add duplicate children'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when inserting into a parent with type `file`', async () => {
+    it('should return a 400 status when inserting into a parent with type `file`', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -243,8 +239,7 @@ describe('node', () => {
         },
       };
       await fileSystemController.insert(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot add child to node type of `file`'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
   });
   describe('remove', () => {
@@ -303,28 +298,24 @@ describe('node', () => {
       req = { params: { name: 'dir1', parent: 'root' } };
       fileSystemModelMock.updateOne = () => Promise.resolve({ nModified: false });
       await fileSystemController.remove(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(400);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when parameters are invalid', async () => {
+    it('should return a 400 status when parameters are invalid', async () => {
       req = { params: {} };
       await fileSystemController.remove(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Request must include `name` and `parent`'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when attempting to remove the root node', async () => {
+    it('should return a 400 status when attempting to remove the root node', async () => {
       req = { params: { name: 'root', parent: 'null' } };
       await fileSystemController.remove(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot remove root node'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when unable to find parent node', async () => {
+    it('should return a 400 status when unable to find parent node', async () => {
       req = { params: { name: 'file1', parent: 'dir1' } };
       await fileSystemController.remove(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot find parent node'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when removing a non-existent node', async () => {
+    it('should return a 404 when removing a non-existent node', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -341,8 +332,7 @@ describe('node', () => {
       };
       req = { params: { name: 'file2', parent: 'root' } };
       await fileSystemController.remove(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot find node to delete'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 404);
     });
   });
   describe('rename', () => {
@@ -430,13 +420,12 @@ describe('node', () => {
       expect(res.sendStatus).toBeCalledTimes(1);
       expect(res.sendStatus).toBeCalledWith(400);
     });
-    it('should return an error when parameters are invalid', async () => {
+    it('should return a 400 status when parameters are invalid', async () => {
       req = { body: {} };
       await fileSystemController.rename(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Request must include `name`, `parent`, `update`'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when attemtping to update root node', async () => {
+    it('should return a 400 status when attemtping to update root node', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -453,10 +442,9 @@ describe('node', () => {
       };
       req = { body: { name: 'root', parent: '100', update: { } } };
       await fileSystemController.rename(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot rename root node'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when unable to find parent node', async () => {
+    it('should return a 400 status when unable to find parent node', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -473,10 +461,9 @@ describe('node', () => {
       };
       req = { body: { name: 'dir3', parent: 'dir2', update: { } } };
       await fileSystemController.rename(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot find parent node'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when adding duplicate children', async () => {
+    it('should return a 400 status when adding duplicate children', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -510,10 +497,9 @@ describe('node', () => {
         },
       };
       await fileSystemController.rename(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot add duplicate children'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
-    it('should return an error when updating an non-existent node', async () => {
+    it('should return a 404 status when updating an non-existent node', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -528,10 +514,9 @@ describe('node', () => {
           children: [],
         }],
       };
-      req = { body: { name: 'dir2', parent: 'root', update: { } } };
+      req = { body: { name: 'dir2', parent: 'root', update: { name: 'dirA' } } };
       await fileSystemController.rename(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Cannot find node to rename'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 404);
     });
   });
 });

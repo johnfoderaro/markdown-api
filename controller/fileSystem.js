@@ -73,25 +73,26 @@ class FileSystemController {
         await this.currentTree();
       }
       if (!isValid) {
-        throw new Error('Request must include `name`, `type`, `parent`, `id` and `children`');
+        return res.sendStatus(400);
       }
       if (body.type === 'file' && !body.id) {
-        throw new Error('File type must include an `id` value of Mongo ObjectID string');
+        return res.sendStatus(400);
       }
 
       const current = await this.traverse(body.parent);
+
       if (!current) {
-        throw new Error('Cannot find parent node');
+        return res.sendStatus(400);
       }
 
       const { children, type } = current;
       const duplicate = children.find(child => child.name === body.name) || false;
 
       if (duplicate) {
-        throw new Error('Cannot add duplicate children');
+        return res.sendStatus(400);
       }
       if (type === 'file') {
-        throw new Error('Cannot add child to node type of `file`');
+        return res.sendStatus(400);
       }
 
       children.push({
@@ -120,22 +121,23 @@ class FileSystemController {
         await this.currentTree();
       }
       if (!isValid) {
-        throw new Error('Request must include `name` and `parent`');
+        return res.sendStatus(400);
       }
       if (params.name === 'root') {
-        throw new Error('Cannot remove root node');
+        return res.sendStatus(400);
       }
 
       const current = await this.traverse(params.parent);
+
       if (!current) {
-        throw new Error('Cannot find parent node');
+        return res.sendStatus(400);
       }
 
       const { children } = current;
       const index = children.map(child => child.name).indexOf(params.name);
 
       if (index < 0) {
-        throw new Error('Cannot find node to delete');
+        return res.sendStatus(404);
       }
 
       children.splice(index, 1);
@@ -159,28 +161,31 @@ class FileSystemController {
         await this.currentTree();
       }
       if (!isValid) {
-        throw new Error('Request must include `name`, `parent`, `update`');
+        return res.sendStatus(400);
       }
       if (body.name === 'root') {
-        throw new Error('Cannot rename root node');
+        return res.sendStatus(400);
       }
 
       const current = await this.traverse(body.parent);
+
       if (!current) {
-        throw new Error('Cannot find parent node');
+        return res.sendStatus(400);
       }
 
       const { children } = current;
       const duplicate = children.find(child => child.name === body.update.name) || false;
+
       if (duplicate) {
-        throw new Error('Cannot add duplicate children');
+        return res.sendStatus(400);
       }
 
       const index = children.map(child => child.name).indexOf(body.name);
 
       if (index < 0) {
-        throw new Error('Cannot find node to rename');
+        return res.sendStatus(404);
       }
+
       children[index].name = body.update.name;
       children[index].children.forEach((child) => {
         const before = child;

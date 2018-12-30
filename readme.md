@@ -79,7 +79,7 @@ HTTP GET request that returns a JSON response containing the file system tree re
 
 #### `/filesystem/insert/`
 
-HTTP POST request that returns a 200 status code upon successfully inserting a node into the file system tree, or a 500 status code upon unsuccessful updating where `updateOne` in MongoDB returns `{ nModified: 0 }`. The request format is JSON and must contain the following parameters:
+HTTP POST request that returns the updated file system tree upon successfully inserting a node. The request format is JSON and must contain the following in the body of the request:
 
 - id
 - name
@@ -136,19 +136,14 @@ Array of children nodes. For node `type` of `file`, which cannot have children, 
 
 #### `/filesystem/remove/`
 
-HTTP DELETE request that returns a 200 status code upon successful removal of the node from the file system tree document, or a 500 status code upon unsuccessful removal where `deleteOne` in MongoDB returns `{ n: 0 }`. The request format is JSON and must contain the following parameters:
+HTTP DELETE request that returns the updated file system tree upon successful removal of the node. It must contain the following parameters:
 
 - name
 - parent
 
 ##### Example request
 
-```json
-{
-  "name": "dirA",
-  "parent": "root",
-}
-```
+`/filesystem/remove/:parent/:name`
 
 ##### Example response
 
@@ -164,7 +159,7 @@ HTTP DELETE request that returns a 200 status code upon successful removal of th
 
 #### `/filesystem/rename/`
 
-HTTP PUT request that returns an updated tree upon successful updating of an existing node from the file system tree document, or a 400 status code upon unsuccessful updating where `updateOne` in MongoDB returns `{ nModified: 0 }`. The request format is JSON and must contain the following parameters:
+HTTP PUT request that returns the updated file system tree upon successful updating of an existing node. The request format is JSON and must contain the following in the body of the request:
 
 - name
 - parent
