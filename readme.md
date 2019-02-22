@@ -1,5 +1,7 @@
 # Markdown API
 
+[![CircleCI](https://circleci.com/gh/johnfoderaro/markdown-api.svg?style=svg)](https://circleci.com/gh/johnfoderaro/markdown-api)
+
 An Express RESTful API that performs CRUD actions against a MongoDB data store for text content, such as markdown or HTML, for applications such as a blog.
 
 This project is the server-side companion to [johnfoderaro/markdown-editor](https://github.com/johnfoderaro/markdown-editor), but it can be used on its own for any other projects that follow and or benefit from its schema.
