@@ -12,7 +12,7 @@ class FileController {
       const { params } = req;
       const hasId = params.id;
       if (!hasId) {
-        throw new Error('Request must include `id` parameter');
+        return res.sendStatus(400);
       }
       const doc = await this.model.findById(params.id);
       return doc ? res.send({ name: doc.name, data: doc.data }) : res.sendStatus(404);
@@ -27,9 +27,8 @@ class FileController {
       const hasName = body.name;
       const hasData = body.data;
       const isValid = hasName && hasData;
-
       if (!isValid) {
-        throw new Error('Request must include `name` and `data`');
+        return res.sendStatus(400);
       }
       const { _id } = await this.model.create({
         name: body.name,
@@ -46,7 +45,7 @@ class FileController {
       const { params } = req;
       const isValid = params.id;
       if (!isValid) {
-        throw new Error('Request must include `id`');
+        return res.sendStatus(400);
       }
       const { id } = params;
       const { n } = await this.model.deleteOne({ _id: id });
@@ -62,18 +61,14 @@ class FileController {
       const hasId = body.id;
       const hasUpdate = body.update;
       const isValid = hasId && hasUpdate;
-
       if (!isValid) {
-        throw new Error('Request must include `id` and `update`');
+        return res.sendStatus(400);
       }
-
       const { id, update: { name, data } } = body;
       const { n, nModified } = await this.model.updateOne({ _id: id }, { name, data });
-
       const success = n === 1 && nModified === 1;
       const notFound = n === 0 && nModified === 0;
       const badRequest = n === 1 && nModified === 0;
-
       if (success) {
         return res.sendStatus(200);
       }
@@ -83,7 +78,6 @@ class FileController {
       if (badRequest) {
         return res.sendStatus(400);
       }
-
       return res.sendStatus(500);
     } catch (error) {
       return next(error);

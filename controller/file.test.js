@@ -34,30 +34,46 @@ describe('file', () => {
     it('should return a document', async () => {
       req = { params: { id: '100' } };
       await fileController.get(req, res, next);
-      expect(res.send).toBeCalledTimes(1);
-      expect(res.send).toBeCalledWith({ name: 'file1', data: 'data' });
+      expect(res.send).toHaveBeenNthCalledWith(1, { name: 'file1', data: 'data' });
     });
+
     it('should return a 404 status if findById fails', async () => {
       req = { params: { id: '100' } };
       fileModelMock.findById = () => null;
       await fileController.get(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(404);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 404);
     });
-    it('should return an error when parameters are invalid', async () => {
+
+    it('should return a 400 status if parameters are invalid', async () => {
       req = { params: { id: null } };
       await fileController.get(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Request must include `id` parameter'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
+    });
+
+    it('should return a 500 status if findById fails', async () => {
+      req = { params: { id: '100' } };
+      fileModelMock.findById = () => {
+        throw new Error();
+      };
+      await fileController.get(req, res, next);
+      expect(next).toHaveBeenNthCalledWith(1, new Error());
     });
   });
+
+
   describe('insert', () => {
     it('should return a document id', async () => {
       req = { body: { name: 'fileA', data: 'fileA' } };
       await fileController.insert(req, res, next);
-      expect(res.send).toBeCalledTimes(1);
-      expect(res.send).toBeCalledWith({ id: '100' });
+      expect(res.send).toHaveBeenNthCalledWith(1, { id: '100' });
     });
+
+    it('should return a 400 status if parameters are invalid', async () => {
+      req = { body: { name: 'fileA' } };
+      await fileController.insert(req, res, next);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
+    });
+
     it('should return a 500 status if create fails', async () => {
       req = { body: { name: 'fileA', data: 'fileA' } };
       fileModelMock.create = () => {
@@ -66,88 +82,80 @@ describe('file', () => {
       await fileController.insert(req, res, next);
       expect(next).toBeCalledTimes(1);
     });
-    it('should return an error when parameters are invalid', async () => {
-      req = { body: { name: 'fileA' } };
-      await fileController.insert(req, res, next);
-      expect(next).toBeCalledTimes(1);
-    });
   });
+
+
   describe('remove', () => {
     it('should return a 200 status', async () => {
       req = { params: { id: '100' } };
       await fileController.remove(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(200);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 200);
     });
+
     it('should return a 404 status if deleteOne fails', async () => {
       req = { params: { id: '100' } };
       fileModelMock.deleteOne = () => ({ nModified: 0 });
       await fileController.remove(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(404);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 404);
     });
-    it('should return an error when parameters are invalid', async () => {
+
+    it('should return a 400 status if parameters are invalid', async () => {
       req = { params: { } };
       await fileController.remove(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Request must include `id`'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
+    });
+
+    it('should return a 500 status if deleteOne throws', async () => {
+      req = { body: { name: 'fileA', data: 'fileA' } };
+      fileModelMock.deleteOne = () => {
+        throw new Error();
+      };
+      await fileController.remove(req, res, next);
+      expect(next).toBeCalledTimes(1, new Error());
     });
   });
-
-  // describe('rename', () => {
-  //   it('should return a 200 status', async () => {
-  //     req = { body: { id: '100', update: { name: 'fileA' } } };
-  //     await fileController.rename(req, res, next);
-  //     expect(res.sendStatus).toBeCalledTimes(1);
-  //   });
-  //   it('should return a 404 status if updateOne fails', async () => {
-  //     req = { body: { id: '100', update: { name: 'fileA' } } };
-  //     fileModelMock.updateOne = () => ({ nModified: 0 });
-  //     await fileController.rename(req, res, next);
-  //     expect(res.sendStatus).toBeCalledTimes(1);
-  //     expect(res.sendStatus).toBeCalledWith(404);
-  //   });
-  //   it('should return an error when parameters are invalid', async () => {
-  //     req = { body: { } };
-  //     await fileController.rename(req, res, next);
-  //     expect(next).toBeCalledTimes(1);
-  //     expect(next).toBeCalledWith(new Error('Request must include `id` and `update`'));
-  //   });
-  // });
 
   describe('update', () => {
     it('should return a 200 status', async () => {
       req = { body: { id: '100', update: { name: '', data: 'updated data' } } };
       await fileController.update(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(200);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 200);
     });
+
     it('should return a 400 status if updateOne does not update anything', async () => {
       req = { body: { id: '100', update: { name: '', data: 'updated data' } } };
       fileModelMock.updateOne = jest.fn(() => ({ n: 1, nModified: 0 }));
       await fileController.update(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(400);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
+
     it('should return a 404 status if updateOne fails', async () => {
       req = { body: { id: '100', update: { data: 'updated data' } } };
       fileModelMock.updateOne = jest.fn(() => ({ n: 0, nModified: 0 }));
       await fileController.update(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(404);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 404);
     });
-    it('should return a 500 status if result isn not success, not not found, not bad request', async () => {
+
+    it('should return a 500 status if result isn\'t success, not found, bad request', async () => {
       req = { body: { id: '100', update: { data: 'updated data' } } };
       fileModelMock.updateOne = jest.fn(() => ({ n: 2, nModified: 0 }));
       await fileController.update(req, res, next);
-      expect(res.sendStatus).toBeCalledTimes(1);
-      expect(res.sendStatus).toBeCalledWith(500);
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 500);
     });
-    it('should return an error when parameters are invalid', async () => {
+
+    it('should catch error and call next when updateOne throws', async () => {
+      req = { body: { id: '100', update: { name: '', data: 'updated data' } } };
+      fileModelMock.updateOne = () => {
+        throw new Error();
+      };
+      await fileController.update(req, res, next);
+      expect(next).toBeCalledTimes(1, new Error());
+    });
+
+    it('should return a 400 status if parameters are invalid', async () => {
       req = { body: { } };
       await fileController.update(req, res, next);
-      expect(next).toBeCalledTimes(1);
-      expect(next).toBeCalledWith(new Error('Request must include `id` and `update`'));
+      expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
   });
 });

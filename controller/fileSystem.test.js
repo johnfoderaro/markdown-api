@@ -80,7 +80,7 @@ describe('node', () => {
       expect(res.send).toHaveBeenNthCalledWith(1, fileSystemController.tree);
     });
 
-    it('should catch error and call next when currentTree throws', async () => {
+    it('should return a 500 status if findOne throws', async () => {
       fileSystemController.currentTree = () => {
         throw new Error();
       };
@@ -267,7 +267,7 @@ describe('node', () => {
       expect(res.sendStatus).toHaveBeenNthCalledWith(1, 400);
     });
 
-    it('should catch error and call next when update throws', async () => {
+    it('should return a 500 status if update throws', async () => {
       req = {
         body: {
           id: '100',
@@ -395,7 +395,7 @@ describe('node', () => {
       expect(res.sendStatus).toHaveBeenNthCalledWith(1, 404);
     });
 
-    it('should catch error and call next when update throws', async () => {
+    it('should return a 500 status if update throws', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
@@ -631,7 +631,7 @@ describe('node', () => {
       expect(res.sendStatus).toHaveBeenNthCalledWith(1, 404);
     });
 
-    it('should catch error and call next when update throws', async () => {
+    it('should return a 500 status if update throws', async () => {
       fileSystemController.tree = {
         _id: '100',
         id: null,
