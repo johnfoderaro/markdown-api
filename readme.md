@@ -291,6 +291,6 @@ The request format is JSON and must contain the following parameters:
 
 200, 400, 404, or 500 HTTP status code.
 
+## License
 
-
-
+MIT
