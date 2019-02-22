@@ -4,7 +4,8 @@
   "description": "RESTful API with MongoDB for Markdown, HTML, and text files",
   "main": "index.js",
   "scripts": {
-    "test": "jest --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand --watch",
     "start": "nodemon index"
   },
