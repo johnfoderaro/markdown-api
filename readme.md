@@ -10,8 +10,8 @@ This project is the server-side companion to [johnfoderaro/markdown-editor](http
 
 ## Getting Started
 
-- Clone the respository
-- `npm i` to install depedencies.
+- Clone the repository
+- `npm i` to install dependencies.
 - `npm start` to run local Express server and connect to MongoDB
 - `npm test` to run Jest tests
 
@@ -29,7 +29,7 @@ The `/filesystem/` route has several endpoints for getting, inserting, removing,
 - `parent`
 - `children`
 
-For example, upon initalizing this application, a tree is created or retrieved from MongoDB, with the following node as its root:
+For example, upon initializing this application, a tree is created or retrieved from MongoDB, with the following node as its root:
 
 ```javascript
 {
@@ -47,7 +47,7 @@ All subsequent nodes require a `parent` and only nodes that are the `type: 'dir'
 
 #### `/filesystem/get/`
 
-HTTP GET request that returns a JSON response containing the file system tree retreived from the root MongoDB document. If no tree or root node is found, one is created under the collection "markdown-api filesystem" (this can be configured via the Mongoose fileSystemSchema within `./model/`). There are no parameters for this endpoint.
+HTTP GET request that returns a JSON response containing the file system tree retrieved from the root MongoDB document. If no tree or root node is found, one is created under the collection "markdown-api filesystem" (this can be configured via the Mongoose fileSystemSchema within `./model/`). There are no parameters for this endpoint.
 
 ##### Example response
 
@@ -97,10 +97,10 @@ String representing the name of the node. Ideally, if a node is a `type` of `fil
 String representing the type of the node. Must be either `file` or `dir` respectively.
 
 ###### `parent`
-String respsending the name of the parent node.
+String representing the name of the parent node.
 
 ###### `children`
-Array of children nodes. For node `type` of `file`, which cannot have children, an empty array must be provided for the sake of consistancy of the node shape throughout the API.
+Array of children nodes. For node `type` of `file`, which cannot have children, an empty array must be provided for the sake of consistency of the node shape throughout the API.
 
 ##### Example request
 
@@ -159,7 +159,7 @@ HTTP DELETE request that returns the updated file system tree upon successful re
 
 #### `/filesystem/rename/`
 
-HTTP PUT request that returns the updated file system tree upon successful updating of an existing node. The request format is JSON and must contain the following in the body of the request:
+HTTP PATCH request that returns the updated file system tree upon successful renaming of an existing node. The request format is JSON and must contain the following in the body of the request:
 
 - name
 - parent
@@ -220,7 +220,7 @@ HTTP GET request that returns a JSON response containing the data from a file do
 
 #### `/file/insert/`
 
-HTTP POST request that returns a JSON response containing the document objectId from MongoDB, once successfully inserted, or a 500 HTTP status code upon unsucessful POSTs where `create` in MongoDB fails. The request format is JSON and must contain the following parameters:
+HTTP POST request that returns a JSON response containing the document objectId from MongoDB, once successfully inserted, or a 500 HTTP status code upon unsuccessful POSTs where `create` in MongoDB fails. The request format is JSON and must contain the following parameters:
 
 - data
 - name
@@ -244,7 +244,7 @@ HTTP POST request that returns a JSON response containing the document objectId 
 
 #### `/file/remove/`
 
-HTTP DELETE request that returns a 200 status code upon successful removal of the doucment from MongoDB, or a 404 status code upon unsuccessful removal where `deleteOne` in MongoDB returns `{ n: 0 }` due to the document not being found. The request format is JSON and must contain the following parameters:
+HTTP DELETE request that returns a 200 status code upon successful removal of the document from MongoDB, or a 404 status code upon unsuccessful removal where `deleteOne` in MongoDB returns `{ n: 0 }` due to the document not being found. The request format is JSON and must contain the following parameters:
 
 - id
 
