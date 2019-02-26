@@ -1,18 +1,21 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
+const config = require('./config.json');
 const fileRouter = require('./route/file');
 const fileSystem = require('./route/fileSystem');
 
+const { port } = config.express;
+const { collection, host } = config.mongo;
+
 const app = express();
-const port = 3000;
 
 app.use(express.json());
 app.use('/file', fileRouter);
 app.use('/filesystem', fileSystem);
 app.listen(port, () => console.log(`express is listening on ${port}`));
 
-mongoose.connect('mongodb://localhost/node-test', { useNewUrlParser: true });
+mongoose.connect(`mongodb://${host}/${collection}`, { useNewUrlParser: true });
 const db = mongoose.connection;
 
 db.on('error', () => console.error('connection error'));

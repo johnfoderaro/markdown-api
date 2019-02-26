@@ -16,8 +16,9 @@ This project is the server-side companion to [johnfoderaro/markdown-editor](http
 - `npm i` to install dependencies.
 - `npm start` to run local Express server and connect to MongoDB
 - `npm test` to run Jest tests
+- Create `config.json` - excluded via `.gitignore`
 
-`./index.js` is where the address for MongoDB connections via Mongoose can be configured, as well as the port number for Express.
+Using `config.json`, you will need to add the `port` number for Express, as well as relevant `host` and `collection` strings for MongoDB. The `config.sample.json` demonstrates the proper structure and required data for the config file.
 
 ## Routes
 
